@@ -62,14 +62,14 @@
                 </div>
             </div>
 
-            <!-- Widget de Reserva Atualizado -->
+            <!-- Widget de Reserva -->
             <div class="md:w-1/3">
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg sticky top-6">
                     <div class="mb-4">
                         <span id="preco-diaria-topo" class="text-2xl font-bold text-gray-900">R$ --</span> <span class="text-gray-500">/ noite</span>
                     </div>
 
-                    <!-- Seletor de Datas (Mudamos type="date" para type="text" para o Flatpickr assumir o controle) -->
+                    <!-- Seletor de Datas -->
                     <div class="border border-gray-300 rounded-lg mb-4">
                         <div class="flex border-b border-gray-300">
                             <div class="w-1/2 p-3 border-r border-gray-300">
@@ -109,7 +109,7 @@
                     </div>
 
                     <button onclick="processarReserva()" id="btn-reservar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        Aguardando Datas...
+                        Carregando...
                     </button>
                     <p class="text-center text-xs text-gray-500 mt-3">Você ainda não será cobrado.</p>
                 </div>
@@ -121,7 +121,8 @@
     <!-- Script de Lógica e Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Atualizamos as funções: usamos getDoc e doc para buscar o Imóvel específico pelo ID
+        import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
@@ -135,71 +136,87 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let configAnfitriao = { valorDiaria: 0, taxaLimpeza: 0, telefoneWhatsapp: "", tituloImovel: "" };
+        // PEGA O ID DO IMÓVEL DIRETO DO LINK (URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const idImovelUrl = urlParams.get('id');
+
+        let configImovel = { valorDiaria: 0, taxaLimpeza: 0, telefoneWhatsapp: "", tituloImovel: "" };
         let totalCalculado = 0;
         let quantidadeNoites = 0;
         let datasBloqueadasFirebase = [];
 
-        // 1. CARREGAR CONFIGURAÇÕES DO ANFITRIÃO
+        // 1. CARREGAR DADOS DO IMÓVEL ESPECÍFICO
         async function carregarImovel() {
-            try {
-                const q = query(collection(db, "Anfitriao"), limit(1));
-                const querySnapshot = await getDocs(q);
+            // Se o usuário entrou na página sem um ID no link, dá erro
+            if (!idImovelUrl) {
+                document.getElementById('titulo-imovel').innerText = "Imóvel não encontrado.";
+                document.getElementById('btn-reservar').innerText = "Link Inválido";
+                document.getElementById('btn-reservar').disabled = true;
+                return;
+            }
 
-                if (!querySnapshot.empty) {
-                    const dados = querySnapshot.docs[0].data();
-                    configAnfitriao = {
-                        valorDiaria: dados.valorDiaria || 0,
-                        taxaLimpeza: dados.taxaLimpeza || 0,
-                        telefoneWhatsapp: dados.telefoneWhatsapp || "",
-                        tituloImovel: dados.tituloImovel || "Apartamento"
+            try {
+                // Busca EXATAMENTE o documento daquele ID na coleção "Imoveis"
+                const docRef = doc(db, "Imoveis", idImovelUrl);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const dados = docSnap.data();
+                    configImovel = {
+                        valorDiaria: dados.diaria || 0,
+                        taxaLimpeza: dados.limpeza || 0,
+                        telefoneWhatsapp: dados.whatsapp || "",
+                        tituloImovel: dados.titulo || "Apartamento"
                     };
 
-                    document.getElementById('titulo-imovel').innerText = configAnfitriao.tituloImovel;
-                    document.getElementById('preco-diaria-topo').innerText = `R$ ${configAnfitriao.valorDiaria}`;
-                    document.getElementById('valor-limpeza').innerText = `R$ ${configAnfitriao.taxaLimpeza}`;
+                    document.getElementById('titulo-imovel').innerText = configImovel.tituloImovel;
+                    document.getElementById('preco-diaria-topo').innerText = `R$ ${configImovel.valorDiaria}`;
+                    document.getElementById('valor-limpeza').innerText = `R$ ${configImovel.taxaLimpeza}`;
+                    
+                    document.getElementById('btn-reservar').innerText = "Aguardando Datas...";
+                    
+                    carregarDatasOcupadas(); // Busca reservas DESTE imóvel
+                } else {
+                    document.getElementById('titulo-imovel').innerText = "Imóvel não existe ou foi excluído.";
                 }
-                
-                // Após carregar os preços, carrega as datas bloqueadas
-                carregarDatasOcupadas();
 
             } catch (error) {
                 console.error("Erro ao puxar imovel:", error);
+                document.getElementById('titulo-imovel').innerText = "Erro na conexão.";
             }
         }
 
-        // 2. BUSCAR DATAS OCUPADAS NO BANCO
+        // 2. BUSCAR DATAS OCUPADAS (Apenas as reservas deste imóvel)
         async function carregarDatasOcupadas() {
             try {
-                const querySnapshot = await getDocs(collection(db, "Reserva"));
+                // PESQUISA: Buscar em "Reserva" ONDE o "id_imovel" for igual ao ID do link
+                const q = query(collection(db, "Reserva"), where("id_imovel", "==", idImovelUrl));
+                const querySnapshot = await getDocs(q);
                 
                 querySnapshot.forEach((doc) => {
                     const dados = doc.data();
-                    // Cria uma regra de bloqueio (range de datas) para cada reserva
                     datasBloqueadasFirebase.push({
                         from: dados.data_checkin,
                         to: dados.data_checkout
                     });
                 });
 
-                // Com as datas em mãos, inicia os calendários visuais!
                 iniciarCalendarios();
 
             } catch (error) {
                 console.error("Erro ao buscar reservas:", error);
-                iniciarCalendarios(); // Inicia mesmo se falhar para não travar a página
+                iniciarCalendarios();
             }
         }
 
-        // 3. MONTAR O CALENDÁRIO VISUAL (FLATPICKR)
+        // 3. MONTAR O CALENDÁRIO (FLATPICKR)
         function iniciarCalendarios() {
             let checkinPicker = flatpickr("#checkin", {
-                locale: "pt", // Português
-                minDate: "today", // Não permite reservar no passado
+                locale: "pt", 
+                minDate: "today", 
                 dateFormat: "Y-m-d",
-                disable: datasBloqueadasFirebase, // A MÁGICA AQUI: Bloqueia as datas do Firebase
+                disable: datasBloqueadasFirebase, 
                 onChange: function(selectedDates, dateStr, instance) {
-                    // Quando escolhe o checkin, o checkout não pode ser antes dele
                     checkoutPicker.set('minDate', dateStr);
                     calcularPreco();
                 }
@@ -227,13 +244,13 @@
                 const dataIn = new Date(checkin);
                 const dataOut = new Date(checkout);
                 const diferencaTempo = dataOut.getTime() - dataIn.getTime();
-                quantidadeNoites = Math.round(diferencaTempo / (1000 * 3600 * 24)); // Correção para noites exatas
+                quantidadeNoites = Math.round(diferencaTempo / (1000 * 3600 * 24)); 
 
                 if (quantidadeNoites > 0) {
-                    const somaDiarias = configAnfitriao.valorDiaria * quantidadeNoites;
-                    totalCalculado = somaDiarias + configAnfitriao.taxaLimpeza;
+                    const somaDiarias = configImovel.valorDiaria * quantidadeNoites;
+                    totalCalculado = somaDiarias + configImovel.taxaLimpeza;
 
-                    document.getElementById('texto-noites').innerText = `R$ ${configAnfitriao.valorDiaria} x ${quantidadeNoites} noites`;
+                    document.getElementById('texto-noites').innerText = `R$ ${configImovel.valorDiaria} x ${quantidadeNoites} noites`;
                     document.getElementById('valor-noites').innerText = `R$ ${somaDiarias}`;
                     document.getElementById('valor-total').innerText = `R$ ${totalCalculado}`;
                     
@@ -259,8 +276,10 @@
             btn.disabled = true;
 
             try {
+                // Adiciona a reserva atrelada ao ID deste imóvel específico!
                 await addDoc(collection(db, "Reserva"), {
-                    imovel_slug: "imovel-teste",
+                    id_imovel: idImovelUrl, // <--- A CHAVE DE LIGAÇÃO
+                    titulo_imovel: configImovel.tituloImovel, // Salvamos o nome para facilitar leitura no painel
                     data_checkin: checkin,
                     data_checkout: checkout,
                     quantidade_hospedes: hospedes,
@@ -269,11 +288,10 @@
                     criado_em: new Date()
                 });
 
-                const mensagem = `Olá! Gostaria de reservar o "${configAnfitriao.tituloImovel}" do dia ${checkin} até ${checkout} (${quantidadeNoites} noites) para ${hospedes} hóspedes. Vi que o valor total fica em R$ ${totalCalculado}. Como podemos seguir?`;
-                const urlWhatsapp = `https://wa.me/${configAnfitriao.telefoneWhatsapp}?text=${encodeURIComponent(mensagem)}`;
+                const mensagem = `Olá! Gostaria de reservar o "${configImovel.tituloImovel}" do dia ${checkin} até ${checkout} (${quantidadeNoites} noites) para ${hospedes} hóspedes. Vi que o valor total fica em R$ ${totalCalculado}. Como podemos seguir?`;
+                const urlWhatsapp = `https://wa.me/${configImovel.telefoneWhatsapp}?text=${encodeURIComponent(mensagem)}`;
                 window.open(urlWhatsapp, '_blank');
                 
-                // Recarrega a página após enviar para atualizar o calendário
                 setTimeout(() => window.location.reload(), 2000);
 
             } catch (erro) {
