@@ -6,6 +6,7 @@
     <title>Meus Imóveis - Central do Anfitrião</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans antialiased flex h-screen overflow-hidden hidden" id="body-config">
 
@@ -33,7 +34,6 @@
     </aside>
 
     <main class="flex-1 flex flex-col h-screen overflow-y-auto">
-        
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
             <h1 class="text-xl font-semibold text-gray-800">Meus Imóveis</h1>
             <button onclick="abrirMeuCatalogo()" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition text-sm flex items-center shadow-sm">
@@ -59,33 +59,46 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Título do Anúncio</label>
-                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="Ex: Lindo Chalé na Montanha com Lareira">
+                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Descrição Profissional</label>
-                        <textarea id="descricao" required rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="Descreva os detalhes, o que tem perto, quantos quartos..."></textarea>
+                        <textarea id="descricao" required rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Diária (R$)</label>
-                            <input type="number" id="diaria" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="250">
+                            <input type="number" id="diaria" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Taxa de Limpeza (R$)</label>
-                            <input type="number" id="limpeza" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="100">
+                            <input type="number" id="limpeza" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp para Contato</label>
-                        <input type="text" id="whatsapp" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="5511999999999">
+                        <input type="text" id="whatsapp" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none">
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Fotos do Imóvel (Você pode selecionar várias de uma vez)</label>
-                        <input type="file" id="fotos-input" accept="image/*" multiple required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                        <label class="block text-sm font-bold text-gray-800 mb-2">Galeria de Fotos</label>
+                        <p class="text-xs text-gray-500 mb-4">Adicione fotos, arraste para reordenar (a primeira será a capa) e classifique os ambientes.</p>
+                        
+                        <div class="mb-4">
+                            <label class="cursor-pointer bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center transition">
+                                <i class="fa-solid fa-camera mr-2"></i> Escolher Fotos
+                                <input type="file" id="fotos-input" accept="image/*" multiple class="hidden">
+                            </label>
+                        </div>
+
+                        <div id="preview-container" class="space-y-2 min-h-[100px] border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
+                            <div id="preview-vazio" class="text-center text-gray-400 py-6 text-sm">
+                                Nenhuma foto adicionada ainda.
+                            </div>
+                        </div>
                     </div>
 
                     <div class="pt-4 flex justify-end">
@@ -121,6 +134,65 @@
 
         let usuarioLogadoUid = null;
 
+        // --- SISTEMA DE FOTOS EM MEMÓRIA ---
+        // Usamos um Map para guardar o arquivo real de imagem vinculado a um ID único
+        const arquivosEmMemoria = new Map();
+        
+        // Ativando o arrastar e soltar (Drag and Drop)
+        const previewContainer = document.getElementById('preview-container');
+        new Sortable(previewContainer, {
+            animation: 150,
+            ghostClass: 'opacity-50' // Efeito visual ao arrastar
+        });
+
+        // Quando o usuário escolhe arquivos
+        document.getElementById('fotos-input').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if(files.length > 0) document.getElementById('preview-vazio').classList.add('hidden');
+
+            files.forEach(file => {
+                const idUnico = 'img_' + Date.now() + Math.random().toString(36).substring(7);
+                arquivosEmMemoria.set(idUnico, file); // Salva o arquivo na memória
+
+                // Cria o "Card" da miniatura
+                const div = document.createElement('div');
+                div.className = 'item-foto flex items-center gap-4 bg-gray-50 p-3 border border-gray-200 rounded-lg cursor-move shadow-sm';
+                div.dataset.id = idUnico; // Guarda o ID para acharmos na hora de salvar
+                
+                div.innerHTML = `
+                    <div class="text-gray-400 cursor-grab px-2 hover:text-blue-500 transition"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <img src="${URL.createObjectURL(file)}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-300">
+                    <div class="flex-1">
+                        <select class="select-ambiente w-full md:w-1/2 text-sm p-2 border border-gray-300 rounded outline-none focus:border-blue-500 bg-white cursor-pointer">
+                            <option value="Fachada / Exterior">Fachada / Exterior</option>
+                            <option value="Sala de Estar">Sala de Estar</option>
+                            <option value="Quarto">Quarto</option>
+                            <option value="Cozinha">Cozinha</option>
+                            <option value="Banheiro">Banheiro</option>
+                            <option value="Área de Lazer">Área de Lazer</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="removerFotoDaMemoria('${idUnico}', this)" class="text-red-500 hover:bg-red-50 p-2 rounded transition">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(div);
+            });
+            e.target.value = ''; // Reseta o input para permitir selecionar a mesma foto de novo se quiser
+        });
+
+        // Função global para remover a foto da lista antes de salvar
+        window.removerFotoDaMemoria = function(id, btnElement) {
+            arquivosEmMemoria.delete(id); // Remove da memória
+            btnElement.closest('.item-foto').remove(); // Remove da tela
+            
+            if(arquivosEmMemoria.size === 0) {
+                document.getElementById('preview-vazio').classList.remove('hidden');
+            }
+        };
+        // -----------------------------------
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('body-config').classList.remove('hidden');
@@ -148,15 +220,17 @@
                     const idImovel = doc.id;
                     const linkCompartilhar = `imovel.html?id=${idImovel}`;
                     
-                    // Usa a primeira foto do array, se existir
                     const urlFotoExibir = (imovel.fotos_urls && imovel.fotos_urls.length > 0) 
                         ? imovel.fotos_urls[0] 
                         : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600';
 
                     const card = `
                         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
-                            <div class="h-32 bg-gray-200">
+                            <div class="h-40 bg-gray-200 relative">
                                 <img src="${urlFotoExibir}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                                    <i class="fa-regular fa-images mr-1"></i> ${imovel.fotos_urls ? imovel.fotos_urls.length : 0}
+                                </div>
                             </div>
                             <div class="p-4 flex-1 flex flex-col">
                                 <h3 class="font-bold text-gray-900 mb-1 truncate">${imovel.titulo}</h3>
@@ -176,55 +250,74 @@
             }
         }
 
-        // SALVAR IMÓVEL + UPLOAD DE VÁRIAS FOTOS
+        // SALVAR IMÓVEL COM A NOVA LÓGICA DE ORDEM E CLASSIFICAÇÃO
         document.getElementById('form-imovel').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('btn-salvar');
-            // Pega a lista de todos os arquivos selecionados
-            const arquivosSelecionados = document.getElementById('fotos-input').files;
+            // Busca todos os itens que estão visualmente na tela, NA EXATA ORDEM em que foram arrastados
+            const elementosNaTela = document.querySelectorAll('.item-foto');
             
-            btn.innerText = `Enviando ${arquivosSelecionados.length} imagem(ns)...`;
+            if(elementosNaTela.length === 0) {
+                alert("Por favor, adicione pelo menos uma foto do imóvel.");
+                return;
+            }
+
+            btn.innerText = `Fazendo upload de ${elementosNaTela.length} foto(s)...`;
             btn.disabled = true;
 
             try {
-                let urlsDasFotos = [];
+                let urlsSimples = []; // Array de strings (para compatibilidade com a galeria antiga)
+                let fotosDetalhadas = []; // Array de objetos { url, ambiente }
 
-                if (arquivosSelecionados.length > 0) {
-                    // Mapeia cada arquivo para uma promessa de upload
-                    const promessasUpload = Array.from(arquivosSelecionados).map(async (arquivo) => {
-                        const nomeUnico = `${Date.now()}_${Math.random().toString(36).substring(7)}_${arquivo.name}`;
-                        const pastaRef = ref(storage, `fotos_imoveis/${usuarioLogadoUid}/${nomeUnico}`);
-                        
-                        const snapshot = await uploadBytes(pastaRef, arquivo);
-                        const linkDownload = await getDownloadURL(snapshot.ref);
-                        return linkDownload;
+                // Percorremos os elementos da tela para respeitar a ordem do Drag and Drop
+                for (let i = 0; i < elementosNaTela.length; i++) {
+                    const divDom = elementosNaTela[i];
+                    const idDaFoto = divDom.dataset.id;
+                    const ambienteEscolhido = divDom.querySelector('.select-ambiente').value;
+                    
+                    const arquivoReal = arquivosEmMemoria.get(idDaFoto);
+
+                    // Upload para o Storage
+                    const nomeUnico = `${Date.now()}_${i}_${arquivoReal.name}`;
+                    const pastaRef = ref(storage, `fotos_imoveis/${usuarioLogadoUid}/${nomeUnico}`);
+                    
+                    const snapshot = await uploadBytes(pastaRef, arquivoReal);
+                    const linkDownload = await getDownloadURL(snapshot.ref);
+
+                    // Salva nas duas estruturas
+                    urlsSimples.push(linkDownload);
+                    fotosDetalhadas.push({
+                        url: linkDownload,
+                        ambiente: ambienteEscolhido
                     });
-
-                    // Executa todos os uploads ao mesmo tempo! (Muito mais rápido)
-                    urlsDasFotos = await Promise.all(promessasUpload);
                 }
 
-                btn.innerText = "Salvando Dados...";
+                btn.innerText = "Salvando no Banco de Dados...";
 
                 await addDoc(collection(db, "Imoveis"), {
                     id_anfitriao: usuarioLogadoUid,
                     titulo: document.getElementById('titulo').value,
-                    descricao: document.getElementById('descricao').value, // <--- Salvando a descrição
+                    descricao: document.getElementById('descricao').value,
                     diaria: Number(document.getElementById('diaria').value),
                     limpeza: Number(document.getElementById('limpeza').value),
                     whatsapp: document.getElementById('whatsapp').value,
-                    fotos_urls: urlsDasFotos, // <--- Salvando o Array com as múltiplas URLs
+                    fotos_urls: urlsSimples, // Lista simples
+                    fotos_detalhes: fotosDetalhadas, // Lista rica (com os comodos)
                     criado_em: new Date()
                 });
 
+                // Reseta tudo após sucesso
                 document.getElementById('form-imovel').reset();
+                document.getElementById('preview-container').innerHTML = `<div id="preview-vazio" class="text-center text-gray-400 py-6 text-sm">Nenhuma foto adicionada ainda.</div>`;
+                arquivosEmMemoria.clear();
+                
                 carregarImoveis();
-                alert("Imóvel cadastrado com sucesso!");
+                alert("Imóvel cadastrado com sucesso! As fotos foram salvas na ordem exata.");
 
             } catch (error) {
                 console.error("Erro no cadastro: ", error);
-                alert("Erro ao salvar. Verifique o console.");
+                alert("Erro ao salvar. Verifique sua conexão.");
             } finally {
                 btn.innerText = "Cadastrar Imóvel";
                 btn.disabled = false;
