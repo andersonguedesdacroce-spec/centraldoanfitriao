@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossas Estadias - Central do Anfitrião</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans antialiased text-gray-800 min-h-screen flex flex-col">
+
+    <nav class="bg-white border-b border-gray-200 py-4 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
+            <div class="font-bold text-xl tracking-tight text-gray-900">
+                <i class="fa-solid fa-house-user text-blue-600 mr-2"></i>Estadias Premium
+            </div>
+            <div class="text-sm text-gray-500 font-medium">Reserva Direta e Segura</div>
+        </div>
+    </nav>
+
+    <header class="bg-gray-900 text-white py-16 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-3">Conheça Nossas Propriedades</h1>
+            <p class="text-gray-300 text-lg max-w-2xl mx-auto">Escolha a estadia perfeita para a sua próxima viagem. Sem taxas escondidas, direto com o anfitrião.</p>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl mx-auto px-4 py-12 w-full">
+        <div id="loading" class="text-center py-12 text-gray-500">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
+            <p>Carregando propriedades disponíveis...</p>
+        </div>
+
+        <div id="grid-imoveis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
+            </div>
+
+        <div id="mensagem-vazio" class="hidden text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-house-crack text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Nenhum imóvel encontrado</h2>
+            <p class="text-gray-500">Este anfitrião ainda não possui propriedades listadas no momento.</p>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-8 text-center text-gray-500 text-sm">
+        <p>Desenvolvido por Central do Anfitrião &copy; 2026</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
+            authDomain: "central-do-anfitriao.firebaseapp.com",
+            projectId: "central-do-anfitriao",
+            storageBucket: "central-do-anfitriao.firebasestorage.app",
+            messagingSenderId: "625070810610",
+            appId: "1:625070810610:web:9f12968b89c666d332b76b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // PEGA O ID DO ANFITRIÃO NO LINK (ex: catalogo.html?host=123)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hostId = urlParams.get('host');
+
+        async function carregarCatalogo() {
+            const grid = document.getElementById('grid-imoveis');
+            const loading = document.getElementById('loading');
+            const msgVazio = document.getElementById('mensagem-vazio');
+
+            if (!hostId) {
+                loading.classList.add('hidden');
+                msgVazio.classList.remove('hidden');
+                msgVazio.querySelector('h2').innerText = "Link Inválido";
+                msgVazio.querySelector('p').innerText = "O link deste catálogo está incompleto.";
+                return;
+            }
+
+            try {
+                // Busca na tabela "Imoveis" todas as casas ONDE id_anfitriao == ID da URL
+                const q = query(collection(db, "Imoveis"), where("id_anfitriao", "==", hostId));
+                const querySnapshot = await getDocs(q);
+
+                loading.classList.add('hidden');
+
+                if (querySnapshot.empty) {
+                    msgVazio.classList.remove('hidden');
+                    return;
+                }
+
+                grid.classList.remove('hidden');
+
+                // Monta o Card para cada imóvel encontrado
+                querySnapshot.forEach((doc) => {
+                    const imovel = doc.data();
+                    const idImovel = doc.id;
+                    const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(imovel.diaria);
+                    
+                    // Link que leva para a página do imóvel específico
+                    const linkReserva = `imovel.html?id=${idImovel}`;
+
+                    const cardHTML = `
+                        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-lg hover:shadow-xl transition duration-300 flex flex-col cursor-pointer group" onclick="window.location.href='${linkReserva}'">
+                            <div class="h-48 bg-gray-200 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-gray-900 shadow-sm">
+                                    ${valorFormatado} <span class="text-xs font-normal text-gray-600">/noite</span>
+                                </div>
+                            </div>
+                            
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="font-bold text-xl text-gray-900 mb-2 line-clamp-1">${imovel.titulo}</h3>
+                                <p class="text-sm text-gray-500 mb-4 flex items-center">
+                                    <i class="fa-solid fa-check text-green-500 mr-2"></i> Reserva Direta
+                                </p>
+                                
+                                <div class="mt-auto pt-4 border-t border-gray-100">
+                                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition text-sm">
+                                        Ver Disponibilidade
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    grid.innerHTML += cardHTML;
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar catálogo:", error);
+                loading.classList.add('hidden');
+                msgVazio.classList.remove('hidden');
+                msgVazio.querySelector('h2').innerText = "Erro de conexão";
+                msgVazio.querySelector('p').innerText = "Tente recarregar a página.";
+            }
+        }
+
+        // Inicia
+        carregarCatalogo();
+    </script>
+</body>
+</html>
