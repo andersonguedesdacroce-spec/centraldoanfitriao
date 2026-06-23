@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apto Premium Centro - Reserva Direta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-white font-sans antialiased text-gray-800">
+
+    <!-- Navbar do Anfitrião -->
+    <nav class="border-b border-gray-200 py-4">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
+            <div class="font-bold text-xl tracking-tight text-gray-900">Estadias Silva</div>
+            <div class="text-sm text-gray-500"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> (11) 99999-9999</div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- Título e Localização -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Apartamento Premium no Coração da Cidade</h1>
+            <div class="flex items-center text-sm text-gray-600">
+                <i class="fa-solid fa-star text-yellow-500 mr-1"></i> 4.98 (45 avaliações)
+                <span class="mx-2">·</span>
+                <i class="fa-solid fa-location-dot mr-1"></i> São Paulo, SP
+            </div>
+        </div>
+
+        <!-- Galeria de Fotos (Grid Simples) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden mb-10 h-64 md:h-96">
+            <div class="bg-gray-300 h-full w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000');"></div>
+            <div class="grid grid-cols-2 gap-2 h-full hidden md:grid">
+                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1502672260266-1c1e94844cb1?auto=format&fit=crop&q=80&w=600');"></div>
+                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=600');"></div>
+                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=600');"></div>
+                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600');"></div>
+            </div>
+        </div>
+
+        <!-- Colunas de Informação e Reserva -->
+        <div class="flex flex-col md:flex-row gap-12">
+            
+            <!-- Esquerda: Descrição -->
+            <div class="md:w-2/3">
+                <div class="border-b border-gray-200 pb-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Espaço inteiro hospedado por João</h2>
+                    <p class="text-gray-600">4 hóspedes · 2 quartos · 2 camas · 1 banheiro</p>
+                </div>
+
+                <div class="border-b border-gray-200 pb-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Sobre este espaço</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Desfrute de uma estadia inesquecível neste apartamento recém-reformado. Localização privilegiada, próximo a metrô, restaurantes e pontos turísticos. O espaço conta com Wi-Fi de alta velocidade, ar condicionado em todos os cômodos e cozinha totalmente equipada.
+                    </p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4">O que esse lugar oferece</h3>
+                    <div class="grid grid-cols-2 gap-4 text-gray-600">
+                        <div class="flex items-center"><i class="fa-solid fa-wifi w-6"></i> Wi-Fi rápido</div>
+                        <div class="flex items-center"><i class="fa-solid fa-snowflake w-6"></i> Ar-condicionado</div>
+                        <div class="flex items-center"><i class="fa-solid fa-tv w-6"></i> TV Smart</div>
+                        <div class="flex items-center"><i class="fa-solid fa-car w-6"></i> Estacionamento gratuito</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direita: Widget de Reserva -->
+            <div class="md:w-1/3">
+                <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg sticky top-6">
+                    <div class="mb-4">
+                        <span class="text-2xl font-bold text-gray-900">R$ 250</span> <span class="text-gray-500">/ noite</span>
+                    </div>
+
+                    <!-- Seletor de Datas (Visual) -->
+                    <div class="border border-gray-300 rounded-lg mb-4">
+                        <div class="flex border-b border-gray-300">
+                            <div class="w-1/2 p-3 border-r border-gray-300">
+                                <label class="block text-xs font-bold uppercase text-gray-800">Check-in</label>
+                                <input type="date" class="w-full text-sm outline-none text-gray-600 mt-1">
+                            </div>
+                            <div class="w-1/2 p-3">
+                                <label class="block text-xs font-bold uppercase text-gray-800">Checkout</label>
+                                <input type="date" class="w-full text-sm outline-none text-gray-600 mt-1">
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <label class="block text-xs font-bold uppercase text-gray-800">Hóspedes</label>
+                            <select class="w-full text-sm outline-none text-gray-600 mt-1 bg-white">
+                                <option>1 hóspede</option>
+                                <option>2 hóspedes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botão CTA -->
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition mb-4">
+                        Consultar Disponibilidade
+                    </button>
+
+                    <!-- Resumo Falso de Preço -->
+                    <div class="text-sm text-gray-600">
+                        <div class="flex justify-between py-2">
+                            <span>R$ 250 x 3 noites</span>
+                            <span>R$ 750</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span>Taxa de limpeza</span>
+                            <span>R$ 100</span>
+                        </div>
+                        <div class="flex justify-between py-4 border-t border-gray-200 font-bold text-gray-900 text-base mt-2">
+                            <span>Total</span>
+                            <span>R$ 850</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>
