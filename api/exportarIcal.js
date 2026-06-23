@@ -1,25 +1,25 @@
-import admin from 'firebase-admin';
+const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
         })
     });
 }
 const db = admin.firestore();
 const formatIcalDate = (dateObj) => dateObj.toISOString().replace(/[-:]/g, '').split('T')[0];
 
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
     const { id_imovel } = req.query;
     if (!id_imovel) return res.status(400).send("ID do imóvel obrigatório.");
 
     try {
         const reservasSnapshot = await db.collection("Reserva").where("id_imovel", "==", id_imovel).get();
         const icsContent = [
-            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//LexOS//SaaS v1.0//PT-BR',
+            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CentralAnfitriao//SaaS v1.0//PT-BR',
             'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'
         ];
 
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
             const dtEnd = r.data_checkout.replace(/-/g, '');
 
             icsContent.push(
-                'BEGIN:VEVENT', `UID:res_lexos_${doc.id}@seudominio.com`,
+                'BEGIN:VEVENT', `UID:res_saas_${doc.id}@seudominio.com`,
                 `DTSTAMP:${formatIcalDate(new Date())}T000000Z`,
                 `DTSTART;VALUE=DATE:${dtStart}`, `DTEND;VALUE=DATE:${dtEnd}`,
                 `SUMMARY:Reserva Site Direto`, 'END:VEVENT'
@@ -43,6 +43,6 @@ export default async function handler(req, res) {
         res.setHeader('Content-Disposition', `attachment; filename="cal_${id_imovel}.ics"`);
         res.status(200).send(icsContent.join('\r\n'));
     } catch (error) {
-        res.status(500).send("Erro interno ao gerar iCal.");
+        res.status(500).send("Erro interno ao gerar iCal: " + error.message);
     }
-}
+};
