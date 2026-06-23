@@ -35,7 +35,7 @@
 
         <!-- Galeria de Fotos -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden mb-10 h-64 md:h-96">
-            <div class="bg-gray-300 h-full w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000');"></div>
+            <div id="foto-principal-imovel" class="bg-gray-300 h-full w-full bg-cover bg-center"></div>
             <div class="grid grid-cols-2 gap-2 h-full hidden md:grid">
                 <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1502672260266-1c1e94844cb1?auto=format&fit=crop&q=80&w=600');"></div>
                 <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=600');"></div>
@@ -121,7 +121,6 @@
     <!-- Script de Lógica e Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        // Atualizamos as funções: usamos getDoc e doc para buscar o Imóvel específico pelo ID
         import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -147,7 +146,6 @@
 
         // 1. CARREGAR DADOS DO IMÓVEL ESPECÍFICO
         async function carregarImovel() {
-            // Se o usuário entrou na página sem um ID no link, dá erro
             if (!idImovelUrl) {
                 document.getElementById('titulo-imovel').innerText = "Imóvel não encontrado.";
                 document.getElementById('btn-reservar').innerText = "Link Inválido";
@@ -156,7 +154,6 @@
             }
 
             try {
-                // Busca EXATAMENTE o documento daquele ID na coleção "Imoveis"
                 const docRef = doc(db, "Imoveis", idImovelUrl);
                 const docSnap = await getDoc(docRef);
 
@@ -173,9 +170,16 @@
                     document.getElementById('preco-diaria-topo').innerText = `R$ ${configImovel.valorDiaria}`;
                     document.getElementById('valor-limpeza').innerText = `R$ ${configImovel.taxaLimpeza}`;
                     
+                    // CARREGA A FOTO REAL DO BANCO DE DADOS
+                    if(dados.foto_url) {
+                        document.getElementById('foto-principal-imovel').style.backgroundImage = `url('${dados.foto_url}')`;
+                    } else {
+                        document.getElementById('foto-principal-imovel').style.backgroundImage = `url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000')`;
+                    }
+                    
                     document.getElementById('btn-reservar').innerText = "Aguardando Datas...";
                     
-                    carregarDatasOcupadas(); // Busca reservas DESTE imóvel
+                    carregarDatasOcupadas(); 
                 } else {
                     document.getElementById('titulo-imovel').innerText = "Imóvel não existe ou foi excluído.";
                 }
@@ -186,10 +190,9 @@
             }
         }
 
-        // 2. BUSCAR DATAS OCUPADAS (Apenas as reservas deste imóvel)
+        // 2. BUSCAR DATAS OCUPADAS
         async function carregarDatasOcupadas() {
             try {
-                // PESQUISA: Buscar em "Reserva" ONDE o "id_imovel" for igual ao ID do link
                 const q = query(collection(db, "Reserva"), where("id_imovel", "==", idImovelUrl));
                 const querySnapshot = await getDocs(q);
                 
@@ -276,10 +279,9 @@
             btn.disabled = true;
 
             try {
-                // Adiciona a reserva atrelada ao ID deste imóvel específico!
                 await addDoc(collection(db, "Reserva"), {
-                    id_imovel: idImovelUrl, // <--- A CHAVE DE LIGAÇÃO
-                    titulo_imovel: configImovel.tituloImovel, // Salvamos o nome para facilitar leitura no painel
+                    id_imovel: idImovelUrl, 
+                    titulo_imovel: configImovel.tituloImovel, 
                     data_checkin: checkin,
                     data_checkout: checkout,
                     quantidade_hospedes: hospedes,
