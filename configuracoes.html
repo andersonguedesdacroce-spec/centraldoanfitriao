@@ -10,6 +10,15 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased flex h-screen overflow-hidden hidden" id="body-config">
 
+    <datalist id="ambientes-sugeridos">
+        <option value="Fachada / Exterior"></option>
+        <option value="Sala de Estar"></option>
+        <option value="Quarto"></option>
+        <option value="Cozinha"></option>
+        <option value="Banheiro"></option>
+        <option value="Área de Lazer"></option>
+    </datalist>
+
     <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
         <div class="h-16 flex items-center px-6 border-b border-gray-800">
             <i class="fa-solid fa-house-chimney text-blue-500 text-xl mr-2"></i>
@@ -85,7 +94,7 @@
 
                     <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
                         <label class="block text-sm font-bold text-gray-800 mb-2">Galeria de Fotos</label>
-                        <p class="text-xs text-gray-500 mb-4">Adicione fotos, arraste para reordenar (a primeira será a capa) e classifique os ambientes.</p>
+                        <p class="text-xs text-gray-500 mb-4">Adicione fotos, arraste para reordenar (a 1ª será a capa) e selecione ou digite o ambiente.</p>
                         
                         <div class="mb-4">
                             <label class="cursor-pointer bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center transition">
@@ -133,65 +142,85 @@
         const storage = getStorage(app);
 
         let usuarioLogadoUid = null;
-
-        // --- SISTEMA DE FOTOS EM MEMÓRIA ---
-        // Usamos um Map para guardar o arquivo real de imagem vinculado a um ID único
         const arquivosEmMemoria = new Map();
         
-        // Ativando o arrastar e soltar (Drag and Drop)
+        // Função para recalcular a ordem visual na tela (1º, 2º, 3º...)
+        function atualizarNumeracao() {
+            const itens = document.querySelectorAll('.item-foto');
+            itens.forEach((item, index) => {
+                const badgeNumero = item.querySelector('.numero-badge');
+                if (badgeNumero) {
+                    badgeNumero.innerText = (index + 1) + 'º';
+                    // Deixa o número 1º destacado em azul para indicar que é a capa
+                    if (index === 0) {
+                        badgeNumero.classList.add('bg-blue-100', 'text-blue-700');
+                        badgeNumero.classList.remove('bg-gray-100', 'text-gray-500');
+                    } else {
+                        badgeNumero.classList.add('bg-gray-100', 'text-gray-500');
+                        badgeNumero.classList.remove('bg-blue-100', 'text-blue-700');
+                    }
+                }
+            });
+        }
+
         const previewContainer = document.getElementById('preview-container');
         new Sortable(previewContainer, {
             animation: 150,
-            ghostClass: 'opacity-50' // Efeito visual ao arrastar
+            ghostClass: 'opacity-50',
+            // Ao terminar de arrastar, recalcula a numeração!
+            onEnd: function () {
+                atualizarNumeracao();
+            }
         });
 
-        // Quando o usuário escolhe arquivos
         document.getElementById('fotos-input').addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
             if(files.length > 0) document.getElementById('preview-vazio').classList.add('hidden');
 
             files.forEach(file => {
                 const idUnico = 'img_' + Date.now() + Math.random().toString(36).substring(7);
-                arquivosEmMemoria.set(idUnico, file); // Salva o arquivo na memória
+                arquivosEmMemoria.set(idUnico, file); 
 
-                // Cria o "Card" da miniatura
                 const div = document.createElement('div');
-                div.className = 'item-foto flex items-center gap-4 bg-gray-50 p-3 border border-gray-200 rounded-lg cursor-move shadow-sm';
-                div.dataset.id = idUnico; // Guarda o ID para acharmos na hora de salvar
+                div.className = 'item-foto flex items-center gap-4 bg-gray-50 p-2 border border-gray-200 rounded-lg cursor-move shadow-sm';
+                div.dataset.id = idUnico; 
                 
                 div.innerHTML = `
                     <div class="text-gray-400 cursor-grab px-2 hover:text-blue-500 transition"><i class="fa-solid fa-grip-vertical"></i></div>
-                    <img src="${URL.createObjectURL(file)}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-300">
-                    <div class="flex-1">
-                        <select class="select-ambiente w-full md:w-1/2 text-sm p-2 border border-gray-300 rounded outline-none focus:border-blue-500 bg-white cursor-pointer">
-                            <option value="Fachada / Exterior">Fachada / Exterior</option>
-                            <option value="Sala de Estar">Sala de Estar</option>
-                            <option value="Quarto">Quarto</option>
-                            <option value="Cozinha">Cozinha</option>
-                            <option value="Banheiro">Banheiro</option>
-                            <option value="Área de Lazer">Área de Lazer</option>
-                            <option value="Outros">Outros</option>
-                        </select>
+                    
+                    <div class="numero-badge w-8 h-8 flex items-center justify-center rounded font-bold text-sm bg-gray-100 text-gray-500">
+                        -
                     </div>
+
+                    <img src="${URL.createObjectURL(file)}" class="w-16 h-16 object-cover rounded shadow-sm border border-gray-300">
+                    
+                    <div class="flex-1">
+                        <input type="text" list="ambientes-sugeridos" placeholder="Selecione ou digite..." class="input-ambiente w-full md:w-1/2 text-sm p-2 border border-gray-300 rounded outline-none focus:border-blue-500 bg-white">
+                    </div>
+                    
                     <button type="button" onclick="removerFotoDaMemoria('${idUnico}', this)" class="text-red-500 hover:bg-red-50 p-2 rounded transition">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 `;
                 previewContainer.appendChild(div);
             });
-            e.target.value = ''; // Reseta o input para permitir selecionar a mesma foto de novo se quiser
+            
+            // Recalcula a numeração após adicionar fotos
+            atualizarNumeracao();
+            e.target.value = ''; 
         });
 
-        // Função global para remover a foto da lista antes de salvar
         window.removerFotoDaMemoria = function(id, btnElement) {
-            arquivosEmMemoria.delete(id); // Remove da memória
-            btnElement.closest('.item-foto').remove(); // Remove da tela
+            arquivosEmMemoria.delete(id); 
+            btnElement.closest('.item-foto').remove(); 
+            
+            // Recalcula a numeração após remover foto
+            atualizarNumeracao();
             
             if(arquivosEmMemoria.size === 0) {
                 document.getElementById('preview-vazio').classList.remove('hidden');
             }
         };
-        // -----------------------------------
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -250,12 +279,10 @@
             }
         }
 
-        // SALVAR IMÓVEL COM A NOVA LÓGICA DE ORDEM E CLASSIFICAÇÃO
         document.getElementById('form-imovel').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('btn-salvar');
-            // Busca todos os itens que estão visualmente na tela, NA EXATA ORDEM em que foram arrastados
             const elementosNaTela = document.querySelectorAll('.item-foto');
             
             if(elementosNaTela.length === 0) {
@@ -267,25 +294,23 @@
             btn.disabled = true;
 
             try {
-                let urlsSimples = []; // Array de strings (para compatibilidade com a galeria antiga)
-                let fotosDetalhadas = []; // Array de objetos { url, ambiente }
+                let urlsSimples = []; 
+                let fotosDetalhadas = []; 
 
-                // Percorremos os elementos da tela para respeitar a ordem do Drag and Drop
                 for (let i = 0; i < elementosNaTela.length; i++) {
                     const divDom = elementosNaTela[i];
                     const idDaFoto = divDom.dataset.id;
-                    const ambienteEscolhido = divDom.querySelector('.select-ambiente').value;
+                    // Lendo do campo input agora
+                    const ambienteEscolhido = divDom.querySelector('.input-ambiente').value || "Não especificado";
                     
                     const arquivoReal = arquivosEmMemoria.get(idDaFoto);
 
-                    // Upload para o Storage
                     const nomeUnico = `${Date.now()}_${i}_${arquivoReal.name}`;
                     const pastaRef = ref(storage, `fotos_imoveis/${usuarioLogadoUid}/${nomeUnico}`);
                     
                     const snapshot = await uploadBytes(pastaRef, arquivoReal);
                     const linkDownload = await getDownloadURL(snapshot.ref);
 
-                    // Salva nas duas estruturas
                     urlsSimples.push(linkDownload);
                     fotosDetalhadas.push({
                         url: linkDownload,
@@ -302,12 +327,11 @@
                     diaria: Number(document.getElementById('diaria').value),
                     limpeza: Number(document.getElementById('limpeza').value),
                     whatsapp: document.getElementById('whatsapp').value,
-                    fotos_urls: urlsSimples, // Lista simples
-                    fotos_detalhes: fotosDetalhadas, // Lista rica (com os comodos)
+                    fotos_urls: urlsSimples, 
+                    fotos_detalhes: fotosDetalhadas, 
                     criado_em: new Date()
                 });
 
-                // Reseta tudo após sucesso
                 document.getElementById('form-imovel').reset();
                 document.getElementById('preview-container').innerHTML = `<div id="preview-vazio" class="text-center text-gray-400 py-6 text-sm">Nenhuma foto adicionada ainda.</div>`;
                 arquivosEmMemoria.clear();
