@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações - Central do Anfitrião</title>
+    <title>Meus Imóveis - Central do Anfitrião</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -19,12 +19,11 @@
             <a href="dashboard.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
             </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+            <a href="calendario.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
                 <i class="fa-regular fa-calendar-alt w-6"></i> Calendário
             </a>
-            <!-- Aba Configurações agora está destacada em azul -->
             <a href="configuracoes.html" class="flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg">
-                <i class="fa-solid fa-gear w-6"></i> Configurações
+                <i class="fa-solid fa-house-user w-6"></i> Meus Imóveis
             </a>
         </nav>
         <div class="p-4 border-t border-gray-800">
@@ -38,25 +37,34 @@
     <main class="flex-1 flex flex-col h-screen overflow-y-auto">
         
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
-            <h1 class="text-xl font-semibold text-gray-800">Configurações do Imóvel</h1>
+            <h1 class="text-xl font-semibold text-gray-800">Meus Imóveis</h1>
         </header>
 
-        <!-- Formulário de Configuração -->
-        <div class="p-8 max-w-3xl">
+        <div class="p-8 max-w-5xl mx-auto w-full">
+            
+            <!-- Lista de Imóveis Cadastrados -->
+            <div class="mb-8">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Imóveis Ativos</h2>
+                <div id="lista-imoveis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full text-center py-8 text-gray-500 bg-white rounded-xl border border-gray-100">
+                        Carregando seus imóveis...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário para ADICIONAR NOVO IMÓVEL -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                <h2 class="text-lg font-bold text-gray-900 border-b pb-2 mb-6"><i class="fa-solid fa-plus text-blue-600 mr-2"></i> Adicionar Novo Imóvel</h2>
                 
-                <form id="form-config" class="space-y-6">
-                    
-                    <h2 class="text-lg font-bold text-gray-900 border-b pb-2">Informações da Página</h2>
-                    
+                <form id="form-imovel" class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Título do Anúncio</label>
-                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Ex: Apartamento Premium no Coração da Cidade">
+                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Ex: Chalé na Montanha">
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Diária Base (R$)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Diária (R$)</label>
                             <input type="number" id="diaria" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="250">
                         </div>
                         <div>
@@ -65,24 +73,19 @@
                         </div>
                     </div>
 
-                    <h2 class="text-lg font-bold text-gray-900 border-b pb-2 mt-8">Recebimento e Contato</h2>
-
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp para receber Reservas</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp para Contato (Deste imóvel)</label>
                         <input type="text" id="whatsapp" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="5511999999999">
-                        <p class="text-xs text-gray-500 mt-1">Coloque o código do país (55) + DDD + Número. Apenas números.</p>
                     </div>
 
-                    <div class="pt-4 flex items-center justify-between">
-                        <span id="mensagem-sucesso" class="text-green-600 font-medium text-sm hidden"><i class="fa-solid fa-check-circle mr-1"></i> Salvo com sucesso!</span>
-                        <button type="submit" id="btn-salvar" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition ml-auto">
-                            Salvar Configurações
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="btn-salvar" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition">
+                            Cadastrar Imóvel
                         </button>
                     </div>
-
                 </form>
-
             </div>
+
         </div>
     </main>
 
@@ -90,10 +93,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        // Importamos as funções de Documento (doc, setDoc, getDoc) em vez de Coleção
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Importamos as funções de query (pesquisa) para buscar os imóveis específicos deste anfitrião
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Suas chaves
         const firebaseConfig = {
             apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
             authDomain: "central-do-anfitriao.firebaseapp.com",
@@ -109,57 +111,100 @@
 
         let usuarioLogadoUid = null;
 
-        // 1. VERIFICA LOGIN E CARREGA DADOS
+        // 1. VERIFICA LOGIN E CARREGA OS IMÓVEIS
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('body-config').classList.remove('hidden');
-                usuarioLogadoUid = user.uid; // Pegamos o ID único desse anfitrião
-                
-                // Busca os dados antigos no banco para preencher o formulário
-                const docRef = doc(db, "Anfitriao", usuarioLogadoUid);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const dados = docSnap.data();
-                    document.getElementById('titulo').value = dados.tituloImovel || "";
-                    document.getElementById('diaria').value = dados.valorDiaria || "";
-                    document.getElementById('limpeza').value = dados.taxaLimpeza || "";
-                    document.getElementById('whatsapp').value = dados.telefoneWhatsapp || "";
-                }
+                usuarioLogadoUid = user.uid; 
+                carregarImoveis();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        // 2. SALVAR NO BANCO DE DADOS
-        document.getElementById('form-config').addEventListener('submit', async function(e) {
+        // 2. BUSCAR IMÓVEIS DO ANFITRIÃO
+        async function carregarImoveis() {
+            const lista = document.getElementById('lista-imoveis');
+            
+            try {
+                // PESQUISA: Busque na tabela "Imoveis" ONDE o "id_anfitriao" for igual ao ID logado
+                const q = query(collection(db, "Imoveis"), where("id_anfitriao", "==", usuarioLogadoUid));
+                const querySnapshot = await getDocs(q);
+
+                lista.innerHTML = ''; // Limpa a tela
+
+                if (querySnapshot.empty) {
+                    lista.innerHTML = `
+                        <div class="col-span-full text-center py-8 text-gray-500 bg-white rounded-xl border border-gray-100">
+                            Você ainda não tem nenhum imóvel cadastrado. Use o formulário abaixo!
+                        </div>`;
+                    return;
+                }
+
+                // Desenha cada imóvel encontrado como um "Card" na tela
+                querySnapshot.forEach((doc) => {
+                    const imovel = doc.data();
+                    const idImovel = doc.id;
+                    
+                    // Cria o link exclusivo deste imóvel (Passo 2 do nosso plano)
+                    const linkCompartilhar = `imovel.html?id=${idImovel}`;
+
+                    const card = `
+                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+                            <div class="h-32 bg-blue-100 flex items-center justify-center">
+                                <i class="fa-solid fa-house text-blue-300 text-4xl"></i>
+                            </div>
+                            <div class="p-4 flex-1 flex flex-col">
+                                <h3 class="font-bold text-gray-900 mb-1 truncate">${imovel.titulo}</h3>
+                                <p class="text-sm text-gray-500 mb-4">Diária: R$ ${imovel.diaria}</p>
+                                
+                                <div class="mt-auto pt-4 border-t border-gray-100">
+                                    <a href="${linkCompartilhar}" target="_blank" class="block w-full text-center bg-gray-50 hover:bg-gray-100 text-blue-600 font-medium py-2 rounded transition border border-gray-200 text-sm">
+                                        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Ver Página
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    lista.innerHTML += card;
+                });
+
+            } catch (error) {
+                console.error("Erro ao buscar imóveis: ", error);
+                lista.innerHTML = `<div class="col-span-full text-red-500 text-center">Erro ao carregar seus imóveis.</div>`;
+            }
+        }
+
+        // 3. SALVAR NOVO IMÓVEL NO BANCO DE DADOS
+        document.getElementById('form-imovel').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('btn-salvar');
-            const msg = document.getElementById('mensagem-sucesso');
             btn.innerText = "Salvando...";
             btn.disabled = true;
 
             try {
-                // Montamos o objeto com os dados da tela
-                const dadosParaSalvar = {
-                    tituloImovel: document.getElementById('titulo').value,
-                    valorDiaria: Number(document.getElementById('diaria').value),
-                    taxaLimpeza: Number(document.getElementById('limpeza').value),
-                    telefoneWhatsapp: document.getElementById('whatsapp').value,
-                    atualizado_em: new Date()
-                };
+                // Adicionamos na NOVA COLEÇÃO "Imoveis", sempre atrelando ao ID do dono
+                await addDoc(collection(db, "Imoveis"), {
+                    id_anfitriao: usuarioLogadoUid, // Chave primária de relação!
+                    titulo: document.getElementById('titulo').value,
+                    diaria: Number(document.getElementById('diaria').value),
+                    limpeza: Number(document.getElementById('limpeza').value),
+                    whatsapp: document.getElementById('whatsapp').value,
+                    criado_em: new Date()
+                });
 
-                // Salvamos usando a tabela "Anfitriao" e o UID como ID da linha
-                await setDoc(doc(db, "Anfitriao", usuarioLogadoUid), dadosParaSalvar, { merge: true });
+                // Limpa o formulário e recarrega a lista
+                document.getElementById('form-imovel').reset();
+                carregarImoveis();
+                
+                alert("Imóvel cadastrado com sucesso!");
 
-                msg.classList.remove('hidden');
-                setTimeout(() => msg.classList.add('hidden'), 3000); // Esconde a mensagem verde após 3 segundos
             } catch (error) {
-                console.error("Erro ao salvar config: ", error);
+                console.error("Erro ao salvar imóvel: ", error);
                 alert("Erro ao salvar. Verifique o console.");
             } finally {
-                btn.innerText = "Salvar Configurações";
+                btn.innerText = "Cadastrar Imóvel";
                 btn.disabled = false;
             }
         });
