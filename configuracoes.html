@@ -56,9 +56,15 @@
                 <h2 class="text-lg font-bold text-gray-900 border-b pb-2 mb-6"><i class="fa-solid fa-plus text-blue-600 mr-2"></i> Adicionar Novo Imóvel</h2>
                 
                 <form id="form-imovel" class="space-y-6">
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Título do Anúncio</label>
-                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Ex: Chalé na Montanha">
+                        <input type="text" id="titulo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="Ex: Lindo Chalé na Montanha com Lareira">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição Profissional</label>
+                        <textarea id="descricao" required rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="Descreva os detalhes, o que tem perto, quantos quartos..."></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-6">
@@ -73,13 +79,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp para Contato (Deste imóvel)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp para Contato</label>
                         <input type="text" id="whatsapp" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 outline-none" placeholder="5511999999999">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Foto Principal do Imóvel</label>
-                        <input type="file" id="foto-input" accept="image/*" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fotos do Imóvel (Você pode selecionar várias de uma vez)</label>
+                        <input type="file" id="fotos-input" accept="image/*" multiple required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
                     </div>
 
                     <div class="pt-4 flex justify-end">
@@ -97,7 +103,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // Importamos as ferramentas do Firebase Storage (uploadBytes e getDownloadURL)
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
         const firebaseConfig = {
@@ -112,7 +117,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app); // Inicializando o Storage
+        const storage = getStorage(app);
 
         let usuarioLogadoUid = null;
 
@@ -143,8 +148,10 @@
                     const idImovel = doc.id;
                     const linkCompartilhar = `imovel.html?id=${idImovel}`;
                     
-                    // Se o imóvel não tiver foto cadastrada, usa uma padrão
-                    const urlFotoExibir = imovel.foto_url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600';
+                    // Usa a primeira foto do array, se existir
+                    const urlFotoExibir = (imovel.fotos_urls && imovel.fotos_urls.length > 0) 
+                        ? imovel.fotos_urls[0] 
+                        : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=600';
 
                     const card = `
                         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
@@ -169,51 +176,55 @@
             }
         }
 
-        // SALVAR NOVO IMÓVEL + UPLOAD DA FOTO
+        // SALVAR IMÓVEL + UPLOAD DE VÁRIAS FOTOS
         document.getElementById('form-imovel').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('btn-salvar');
-            const fotoArquivo = document.getElementById('foto-input').files[0];
+            // Pega a lista de todos os arquivos selecionados
+            const arquivosSelecionados = document.getElementById('fotos-input').files;
             
-            btn.innerText = "Enviando Imagem...";
+            btn.innerText = `Enviando ${arquivosSelecionados.length} imagem(ns)...`;
             btn.disabled = true;
 
             try {
-                let fotoUrlFinal = "";
+                let urlsDasFotos = [];
 
-                if (fotoArquivo) {
-                    // Criamos um endereço único para a foto dentro do Storage usando a data atual
-                    const nomeUnicoDoArquivo = `${Date.now()}_${fotoArquivo.name}`;
-                    const pastaRef = ref(storage, `fotos_imoveis/${usuarioLogadoUid}/${nomeUnicoDoArquivo}`);
-                    
-                    // PASSO A: Faz o upload da foto pro Storage
-                    const snapshotUpload = await uploadBytes(pastaRef, fotoArquivo);
-                    
-                    // PASSO B: Pede pro Storage gerar um link de internet público para essa foto
-                    fotoUrlFinal = await getDownloadURL(snapshotUpload.ref);
+                if (arquivosSelecionados.length > 0) {
+                    // Mapeia cada arquivo para uma promessa de upload
+                    const promessasUpload = Array.from(arquivosSelecionados).map(async (arquivo) => {
+                        const nomeUnico = `${Date.now()}_${Math.random().toString(36).substring(7)}_${arquivo.name}`;
+                        const pastaRef = ref(storage, `fotos_imoveis/${usuarioLogadoUid}/${nomeUnico}`);
+                        
+                        const snapshot = await uploadBytes(pastaRef, arquivo);
+                        const linkDownload = await getDownloadURL(snapshot.ref);
+                        return linkDownload;
+                    });
+
+                    // Executa todos os uploads ao mesmo tempo! (Muito mais rápido)
+                    urlsDasFotos = await Promise.all(promessasUpload);
                 }
 
                 btn.innerText = "Salvando Dados...";
 
-                // PASSO C: Salva no Firestore incluindo o link da foto que geramos acima!
                 await addDoc(collection(db, "Imoveis"), {
                     id_anfitriao: usuarioLogadoUid,
                     titulo: document.getElementById('titulo').value,
+                    descricao: document.getElementById('descricao').value, // <--- Salvando a descrição
                     diaria: Number(document.getElementById('diaria').value),
                     limpeza: Number(document.getElementById('limpeza').value),
                     whatsapp: document.getElementById('whatsapp').value,
-                    foto_url: fotoUrlFinal, // <--- O link público da foto real guardado no banco
+                    fotos_urls: urlsDasFotos, // <--- Salvando o Array com as múltiplas URLs
                     criado_em: new Date()
                 });
 
                 document.getElementById('form-imovel').reset();
                 carregarImoveis();
-                alert("Imóvel cadastrado com sucesso com a foto real!");
+                alert("Imóvel cadastrado com sucesso!");
 
             } catch (error) {
-                console.error("Erro completo no cadastro do imóvel: ", error);
-                alert("Erro ao salvar. Verifique se ativou o Storage no console.");
+                console.error("Erro no cadastro: ", error);
+                alert("Erro ao salvar. Verifique o console.");
             } finally {
                 btn.innerText = "Cadastrar Imóvel";
                 btn.disabled = false;
