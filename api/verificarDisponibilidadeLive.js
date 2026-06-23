@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 // Parser rápido para ler as datas do texto iCal
 const parseIcal = (texto) => {
     const eventos = [];
