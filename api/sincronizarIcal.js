@@ -1,11 +1,11 @@
-import admin from 'firebase-admin';
+const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
         })
     });
 }
@@ -25,8 +25,7 @@ function parseIcal(texto) {
     return eventos;
 }
 
-export default async function handler(req, res) {
-    // Vercel Cron envia um header especial. Isso bloqueia acessos externos indesejados.
+module.exports = async function (req, res) {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
         return res.status(401).end('Unauthorized');
     }
@@ -65,4 +64,4 @@ export default async function handler(req, res) {
     } catch (e) {
         res.status(500).send(e.message);
     }
-}
+};
