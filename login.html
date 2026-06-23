@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Central do Anfitrião</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans antialiased flex items-center justify-center h-screen">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
+                <i class="fa-solid fa-house-chimney text-blue-600 text-xl"></i>
+            </div>
+            <h2 id="titulo-pagina" class="text-2xl font-bold text-gray-900">Acesse sua conta</h2>
+            <p id="subtitulo-pagina" class="text-sm text-gray-500 mt-1">Gerencie suas reservas e ganhos.</p>
+        </div>
+
+        <form id="auth-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                <input type="email" id="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="seu@email.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                <input type="password" id="senha" required minlength="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••">
+            </div>
+
+            <div id="mensagem-erro" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+            </div>
+
+            <button type="submit" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition flex justify-center items-center">
+                <span>Entrar</span>
+            </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <span id="texto-alternancia">Não tem uma conta?</span> 
+            <button onclick="alternarModo()" id="btn-alternancia" class="text-blue-600 font-bold hover:underline">Cadastre-se grátis</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // Suas chaves exatas do projeto Central do Anfitrião
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CFAimgAxgeOhcWQ",
+            authDomain: "central-do-anfitriao.firebaseapp.com",
+            projectId: "central-do-anfitriao",
+            storageBucket: "central-do-anfitriao.firebasestorage.app",
+            messagingSenderId: "625070810610",
+            appId: "1:625070810610:web:9f12968b89c666d332b76b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Controle de Tela (Login vs Cadastro)
+        let isLoginMode = true; 
+
+        window.alternarModo = function() {
+            isLoginMode = !isLoginMode;
+            
+            document.getElementById('titulo-pagina').innerText = isLoginMode ? "Acesse sua conta" : "Crie sua conta";
+            document.getElementById('subtitulo-pagina').innerText = isLoginMode ? "Gerencie suas reservas e ganhos." : "Comece a economizar nas taxas agora.";
+            document.getElementById('btn-submit').innerText = isLoginMode ? "Entrar" : "Criar Conta";
+            document.getElementById('texto-alternancia').innerText = isLoginMode ? "Não tem uma conta?" : "Já tem uma conta?";
+            document.getElementById('btn-alternancia').innerText = isLoginMode ? "Cadastre-se grátis" : "Faça login";
+            
+            // Oculta erros antigos ao trocar de tela
+            document.getElementById('mensagem-erro').classList.add('hidden');
+        };
+
+        // Lógica de Autenticação
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Impede a página de recarregar
+            
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const btnSubmit = document.getElementById('btn-submit');
+            const msgErro = document.getElementById('mensagem-erro');
+            
+            // UI de Carregamento
+            const textoOriginal = btnSubmit.innerText;
+            btnSubmit.innerText = "Aguarde...";
+            btnSubmit.disabled = true;
+            msgErro.classList.add('hidden');
+
+            try {
+                if (isLoginMode) {
+                    // Tenta Fazer Login
+                    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+                    console.log("Logado com sucesso:", userCredential.user);
+                    window.location.href = 'dashboard.html'; // Redireciona para o painel
+                } else {
+                    // Tenta Criar Conta Nova
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+                    console.log("Conta criada com sucesso:", userCredential.user);
+                    
+                    // Futuramente, aqui também salvaremos o anfitrião no Banco de Dados Firestore
+                    
+                    window.location.href = 'dashboard.html'; // Redireciona para o painel
+                }
+            } catch (error) {
+                console.error("Erro Firebase Auth:", error);
+                
+                // Tratamento de erros amigável
+                msgErro.classList.remove('hidden');
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msgErro.innerText = "E-mail ou senha incorretos.";
+                } else if (error.code === 'auth/email-already-in-use') {
+                    msgErro.innerText = "Este e-mail já está cadastrado.";
+                } else if (error.code === 'auth/weak-password') {
+                    msgErro.innerText = "A senha deve ter pelo menos 6 caracteres.";
+                } else {
+                    msgErro.innerText = "Ocorreu um erro. Tente novamente.";
+                }
+            } finally {
+                // Restaura o botão
+                btnSubmit.innerText = textoOriginal;
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
