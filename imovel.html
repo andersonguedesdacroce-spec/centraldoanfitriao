@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Bibliotecas do Calendário Visual (Flatpickr) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
@@ -23,33 +22,27 @@
 
     <main class="max-w-6xl mx-auto px-4 py-8">
         
-        <!-- Título Dinâmico -->
         <div class="mb-6">
             <h1 id="titulo-imovel" class="text-3xl font-bold text-gray-900 mb-2">Carregando imóvel...</h1>
             <div class="flex items-center text-sm text-gray-600">
                 <i class="fa-solid fa-star text-yellow-500 mr-1"></i> 5.0 (Novo)
                 <span class="mx-2">·</span>
-                <i class="fa-solid fa-location-dot mr-1"></i> Brasil
+                <i class="fa-solid fa-location-dot mr-1"></i> Reserva Verificada
             </div>
         </div>
 
-        <!-- Galeria de Fotos -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden mb-10 h-64 md:h-96">
-            <div id="foto-principal-imovel" class="bg-gray-300 h-full w-full bg-cover bg-center"></div>
-            <div class="grid grid-cols-2 gap-2 h-full hidden md:grid">
-                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1502672260266-1c1e94844cb1?auto=format&fit=crop&q=80&w=600');"></div>
-                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=600');"></div>
-                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=600');"></div>
-                <div class="bg-gray-300 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600');"></div>
-            </div>
+        <div id="galeria-fotos" class="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden mb-10 h-64 md:h-96">
+            <div class="bg-gray-200 h-full w-full flex items-center justify-center text-gray-400">Carregando fotos...</div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-12">
             
             <div class="md:w-2/3">
                 <div class="border-b border-gray-200 pb-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-2">Espaço inteiro só para você</h2>
-                    <p class="text-gray-600">Aluguel por temporada sem taxas surpresas.</p>
+                    <h2 class="text-xl font-semibold mb-4">Sobre este espaço</h2>
+                    <p id="descricao-imovel" class="text-gray-600 leading-relaxed whitespace-pre-line">
+                        Carregando descrição...
+                    </p>
                 </div>
                 <div class="mb-6">
                     <h3 class="text-lg font-semibold mb-4">O que esse lugar oferece</h3>
@@ -62,14 +55,12 @@
                 </div>
             </div>
 
-            <!-- Widget de Reserva -->
             <div class="md:w-1/3">
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg sticky top-6">
                     <div class="mb-4">
                         <span id="preco-diaria-topo" class="text-2xl font-bold text-gray-900">R$ --</span> <span class="text-gray-500">/ noite</span>
                     </div>
 
-                    <!-- Seletor de Datas -->
                     <div class="border border-gray-300 rounded-lg mb-4">
                         <div class="flex border-b border-gray-300">
                             <div class="w-1/2 p-3 border-r border-gray-300">
@@ -92,7 +83,6 @@
                         </div>
                     </div>
 
-                    <!-- Resumo de Preço Dinâmico -->
                     <div class="text-sm text-gray-600 mb-4 hidden" id="resumo-preco">
                         <div class="flex justify-between py-2">
                             <span id="texto-noites">R$ 0 x 0 noites</span>
@@ -118,7 +108,6 @@
         </div>
     </main>
 
-    <!-- Script de Lógica e Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -135,7 +124,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // PEGA O ID DO IMÓVEL DIRETO DO LINK (URL)
         const urlParams = new URLSearchParams(window.location.search);
         const idImovelUrl = urlParams.get('id');
 
@@ -144,7 +132,6 @@
         let quantidadeNoites = 0;
         let datasBloqueadasFirebase = [];
 
-        // 1. CARREGAR DADOS DO IMÓVEL ESPECÍFICO
         async function carregarImovel() {
             if (!idImovelUrl) {
                 document.getElementById('titulo-imovel').innerText = "Imóvel não encontrado.";
@@ -170,11 +157,37 @@
                     document.getElementById('preco-diaria-topo').innerText = `R$ ${configImovel.valorDiaria}`;
                     document.getElementById('valor-limpeza').innerText = `R$ ${configImovel.taxaLimpeza}`;
                     
-                    // CARREGA A FOTO REAL DO BANCO DE DADOS
-                    if(dados.foto_url) {
-                        document.getElementById('foto-principal-imovel').style.backgroundImage = `url('${dados.foto_url}')`;
+                    // Injeta a Descrição (com tratamento caso esteja vazia)
+                    document.getElementById('descricao-imovel').innerText = dados.descricao || "O anfitrião ainda não adicionou uma descrição para este espaço.";
+
+                    // CONSTRUTOR DE GALERIA DINÂMICA
+                    const galeria = document.getElementById('galeria-fotos');
+                    const fotos = dados.fotos_urls || [];
+
+                    if (fotos.length === 0) {
+                        // Sem fotos
+                        galeria.innerHTML = `<div class="bg-gray-300 h-full w-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000');"></div>`;
+                    } else if (fotos.length === 1) {
+                        // Apenas 1 foto (Ocupa o espaço todo)
+                        galeria.className = "grid grid-cols-1 rounded-xl overflow-hidden mb-10 h-64 md:h-96";
+                        galeria.innerHTML = `<div class="bg-gray-300 h-full w-full bg-cover bg-center" style="background-image: url('${fotos[0]}');"></div>`;
                     } else {
-                        document.getElementById('foto-principal-imovel').style.backgroundImage = `url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000')`;
+                        // Várias fotos: Cria o mosaico com a foto principal na esquerda e as menores na direita
+                        let gridHTML = `<div class="bg-gray-300 h-full w-full bg-cover bg-center cursor-pointer hover:opacity-90 transition" style="background-image: url('${fotos[0]}');"></div>`;
+                        gridHTML += `<div class="grid grid-cols-2 gap-2 h-full hidden md:grid">`;
+                        
+                        // Mostra até 4 fotos na lateral
+                        for (let i = 1; i < Math.min(fotos.length, 5); i++) {
+                            gridHTML += `<div class="bg-gray-300 bg-cover bg-center cursor-pointer hover:opacity-90 transition" style="background-image: url('${fotos[i]}');"></div>`;
+                        }
+                        
+                        // Preenche buracos em branco se o cara enviou, por exemplo, apenas 3 fotos
+                        for (let i = fotos.length; i < 5; i++) {
+                             gridHTML += `<div class="bg-gray-100 h-full w-full"></div>`;
+                        }
+                        
+                        gridHTML += `</div>`;
+                        galeria.innerHTML = gridHTML;
                     }
                     
                     document.getElementById('btn-reservar').innerText = "Aguardando Datas...";
@@ -190,7 +203,6 @@
             }
         }
 
-        // 2. BUSCAR DATAS OCUPADAS
         async function carregarDatasOcupadas() {
             try {
                 const q = query(collection(db, "Reserva"), where("id_imovel", "==", idImovelUrl));
@@ -212,7 +224,6 @@
             }
         }
 
-        // 3. MONTAR O CALENDÁRIO (FLATPICKR)
         function iniciarCalendarios() {
             let checkinPicker = flatpickr("#checkin", {
                 locale: "pt", 
@@ -236,7 +247,6 @@
             });
         }
 
-        // 4. CALCULADORA DE PREÇOS
         function calcularPreco() {
             const checkin = document.getElementById('checkin').value;
             const checkout = document.getElementById('checkout').value;
@@ -268,7 +278,6 @@
             }
         }
 
-        // 5. ENVIAR RESERVA
         window.processarReserva = async function() {
             const checkin = document.getElementById('checkin').value;
             const checkout = document.getElementById('checkout').value;
@@ -304,7 +313,6 @@
             }
         }
 
-        // Inicia tudo
         carregarImovel();
     </script>
 </body>
