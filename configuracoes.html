@@ -212,6 +212,13 @@
             }
         });
 
+// Abre o Catálogo Público em nova guia
+        window.abrirMeuCatalogo = function() {
+            if (usuarioLogadoUid) {
+                window.open(`catalogo.html?host=${usuarioLogadoUid}`, '_blank');
+            }
+        };
+        
         // Logout
         document.getElementById('btn-sair').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = 'login.html');
