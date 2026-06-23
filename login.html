@@ -40,7 +40,7 @@
 
         <div class="mt-6 text-center text-sm text-gray-600">
             <span id="texto-alternancia">Não tem uma conta?</span> 
-            <button onclick="alternarModo()" id="btn-alternancia" class="text-blue-600 font-bold hover:underline">Cadastre-se grátis</button>
+            <button type="button" onclick="alternarModo()" id="btn-alternancia" class="text-blue-600 font-bold hover:underline">Cadastre-se grátis</button>
         </div>
     </div>
 
@@ -48,14 +48,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // Suas chaves exatas do projeto Central do Anfitrião
+        // Sua chave exata copiada do Firebase Config
         const firebaseConfig = {
-            apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CFAimgAxgeOhcWQ",
+            apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
             authDomain: "central-do-anfitriao.firebaseapp.com",
             projectId: "central-do-anfitriao",
             storageBucket: "central-do-anfitriao.firebasestorage.app",
             messagingSenderId: "625070810610",
-            appId: "1:625070810610:web:9f12968b89c666d332b76b"
+            appId: "1:625070810610:web:9f12968b89c666d332b76b",
+            measurementId: "G-4LNN8EN46S"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -102,9 +103,6 @@
                     // Tenta Criar Conta Nova
                     const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
                     console.log("Conta criada com sucesso:", userCredential.user);
-                    
-                    // Futuramente, aqui também salvaremos o anfitrião no Banco de Dados Firestore
-                    
                     window.location.href = 'dashboard.html'; // Redireciona para o painel
                 }
             } catch (error) {
@@ -115,11 +113,11 @@
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     msgErro.innerText = "E-mail ou senha incorretos.";
                 } else if (error.code === 'auth/email-already-in-use') {
-                    msgErro.innerText = "Este e-mail já está cadastrado.";
+                    msgErro.innerText = "Este e-mail já está cadastrado. Faça login.";
                 } else if (error.code === 'auth/weak-password') {
                     msgErro.innerText = "A senha deve ter pelo menos 6 caracteres.";
                 } else {
-                    msgErro.innerText = "Ocorreu um erro. Tente novamente.";
+                    msgErro.innerText = "Ocorreu um erro: " + error.message;
                 }
             } finally {
                 // Restaura o botão
