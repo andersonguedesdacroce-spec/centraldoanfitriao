@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/sincronizarIcal",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
