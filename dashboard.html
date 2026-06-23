@@ -8,20 +8,22 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 font-sans antialiased flex h-screen overflow-hidden hidden" id="body-dashboard">
+
+    <!-- Sidebar (Menu Lateral) -->
     <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
         <div class="h-16 flex items-center px-6 border-b border-gray-800">
             <i class="fa-solid fa-house-chimney text-blue-500 text-xl mr-2"></i>
             <span class="font-bold text-lg">Central Anfitrião</span>
         </div>
-<nav class="flex-1 px-4 py-6 space-y-2">
+        <nav class="flex-1 px-4 py-6 space-y-2">
             <a href="dashboard.html" class="flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg">
                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
             </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+            <a href="calendario.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
                 <i class="fa-regular fa-calendar-alt w-6"></i> Calendário
             </a>
             <a href="configuracoes.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
-                <i class="fa-solid fa-gear w-6"></i> Configurações
+                <i class="fa-solid fa-house-user w-6"></i> Meus Imóveis
             </a>
         </nav>
         <div class="p-4 border-t border-gray-800">
@@ -31,14 +33,12 @@
         </div>
     </aside>
 
+    <!-- Conteúdo Principal -->
     <main class="flex-1 flex flex-col h-screen overflow-y-auto">
         
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
             <h1 class="text-xl font-semibold text-gray-800">Visão Geral</h1>
             <div class="flex items-center space-x-4">
-                <a href="imovel.html" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
-                    <i class="fa-solid fa-external-link-alt mr-1"></i> Ver meu site
-                </a>
                 <div class="flex items-center space-x-2">
                     <span id="user-email" class="text-sm text-gray-600 font-medium hidden sm:block">Carregando...</span>
                     <div class="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
@@ -50,11 +50,12 @@
 
         <div class="p-8">
             
+            <!-- Cards de Resumo -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="text-gray-500 text-sm font-medium mb-1">Ganhos em Reservas</h3>
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">Ganhos Totais</h3>
                     <div id="ganhos-mes" class="text-3xl font-bold text-gray-900 mb-2">R$ 0,00</div>
-                    <span class="text-green-500 text-sm font-medium">Via site direto</span>
+                    <span class="text-green-500 text-sm font-medium">Todos os imóveis</span>
                 </div>
                 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -64,15 +65,13 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-start">
-                    <h3 class="text-gray-500 text-sm font-medium mb-3">Status de Sincronização</h3>
-                    <div class="flex items-center space-x-2 bg-yellow-50 px-3 py-1.5 rounded-full border border-yellow-200">
-                        <div class="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse"></div>
-                        <span class="text-yellow-700 text-sm font-medium">Aguardando iCal</span>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-2">Configure nas opções</p>
+                    <h3 class="text-gray-500 text-sm font-medium mb-3">Imóveis Ativos</h3>
+                    <div id="qtd-imoveis" class="text-3xl font-bold text-blue-600 mb-2">0</div>
+                    <p class="text-xs text-gray-400 mt-2">Em seu portfólio</p>
                 </div>
             </div>
 
+            <!-- Próximas Reservas -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 class="text-lg font-bold text-gray-800">Histórico de Reservas</h2>
@@ -81,9 +80,9 @@
                     <table class="w-full text-left border-collapse min-w-full">
                         <thead>
                             <tr class="bg-gray-50 text-gray-500 text-sm border-b border-gray-100">
+                                <th class="py-3 px-6 font-medium">Imóvel</th>
                                 <th class="py-3 px-6 font-medium">Check-in</th>
                                 <th class="py-3 px-6 font-medium">Check-out</th>
-                                <th class="py-3 px-6 font-medium">Hóspedes</th>
                                 <th class="py-3 px-6 font-medium">Valor Total</th>
                                 <th class="py-3 px-6 font-medium">Status</th>
                             </tr>
@@ -100,12 +99,12 @@
         </div>
     </main>
 
+    <!-- Script de Lógica e Conexão com Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Chaves corrigidas do seu projeto
         const firebaseConfig = {
             apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
             authDomain: "central-do-anfitriao.firebaseapp.com",
@@ -119,72 +118,89 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 1. O PORTEIRO (Proteção de Rota)
+        let usuarioLogadoUid = null;
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Usuário está logado. Mostra a página e o email dele.
                 document.getElementById('body-dashboard').classList.remove('hidden');
                 document.getElementById('user-email').innerText = user.email;
-                
-                // Agora que sabemos que ele está logado, buscamos os dados
-                carregarReservas();
+                usuarioLogadoUid = user.uid;
+                carregarDadosDoDashboard();
             } else {
-                // Não está logado? Expulsa para o login
                 window.location.href = 'login.html';
             }
         });
 
-        // 2. FUNÇÃO DE SAIR (Logout)
         document.getElementById('btn-sair').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = 'login.html';
-            }).catch((error) => {
-                console.error("Erro ao sair:", error);
-            });
+            signOut(auth).then(() => window.location.href = 'login.html');
         });
 
-        // 3. O MOTOR DE DADOS (Busca do Banco)
-        async function carregarReservas() {
+        async function carregarDadosDoDashboard() {
             const tabela = document.getElementById('tabela-reservas');
             let totalGanhos = 0;
+            let todasReservasDoAnfitriao = [];
 
             try {
-                // Busca todas as reservas no Firestore (ordenadas por data de criação)
-                const q = query(collection(db, "Reserva"), orderBy("criado_em", "desc"));
-                const querySnapshot = await getDocs(q);
+                // PASSO 1: Descobrir quais são os imóveis deste anfitrião
+                const qImoveis = query(collection(db, "Imoveis"), where("id_anfitriao", "==", usuarioLogadoUid));
+                const snapImoveis = await getDocs(qImoveis);
+                const idsMeusImoveis = [];
                 
-                tabela.innerHTML = ''; // Limpa a mensagem de "Carregando..."
+                document.getElementById('qtd-imoveis').innerText = snapImoveis.size; // Atualiza card de Qtd Imóveis
 
-                if (querySnapshot.empty) {
-                    tabela.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">Nenhuma reserva encontrada ainda.</td></tr>';
+                snapImoveis.forEach(doc => {
+                    idsMeusImoveis.push(doc.id);
+                });
+
+                if (idsMeusImoveis.length === 0) {
+                    tabela.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">Cadastre seu primeiro imóvel na aba "Meus Imóveis".</td></tr>';
                     return;
                 }
 
-                querySnapshot.forEach((doc) => {
-                    const dados = doc.data();
-                    
-                    // Soma para os cards financeiros
+                // PASSO 2: Buscar as reservas APENAS desses imóveis
+                // (Para cada imóvel, buscamos as reservas dele e juntamos tudo numa lista)
+                const promessasDeBusca = idsMeusImoveis.map(idImovel => {
+                    const qReserva = query(collection(db, "Reserva"), where("id_imovel", "==", idImovel));
+                    return getDocs(qReserva);
+                });
+
+                const resultadosBusca = await Promise.all(promessasDeBusca);
+
+                resultadosBusca.forEach(snapReserva => {
+                    snapReserva.forEach(docReserva => {
+                        todasReservasDoAnfitriao.push(docReserva.data());
+                    });
+                });
+
+                // PASSO 3: Ordenar as reservas por data de criação (as mais novas primeiro)
+                todasReservasDoAnfitriao.sort((a, b) => b.criado_em.toDate() - a.criado_em.toDate());
+
+                // PASSO 4: Desenhar a tabela
+                tabela.innerHTML = '';
+
+                if (todasReservasDoAnfitriao.length === 0) {
+                    tabela.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">Nenhuma reserva encontrada para os seus imóveis.</td></tr>';
+                    return;
+                }
+
+                todasReservasDoAnfitriao.forEach((dados) => {
                     totalGanhos += dados.valor_total || 0;
 
-                    // Formata a data de AAAA-MM-DD para DD/MM/AAAA (padrão Brasil)
                     const formatarData = (dataStr) => {
                         if(!dataStr) return "-";
                         const [ano, mes, dia] = dataStr.split('-');
                         return `${dia}/${mes}/${ano}`;
                     };
 
-                    // Formata Moeda (R$)
                     const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dados.valor_total);
-
-                    // Cor do Status
                     const corStatus = dados.status === 'pendente' ? 'text-yellow-600 bg-yellow-100' : 'text-green-600 bg-green-100';
 
-                    // Cria a linha (Tr) da tabela HTML
+                    // Aqui está a grande diferença: listamos o TITULO DO IMOVEL na primeira coluna
                     const linha = `
                         <tr class="border-b border-gray-50 hover:bg-gray-50">
-                            <td class="py-4 px-6 font-medium text-gray-900">${formatarData(dados.data_checkin)}</td>
-                            <td class="py-4 px-6">${formatarData(dados.data_checkout)}</td>
-                            <td class="py-4 px-6">${dados.quantidade_hospedes} hóspede(s)</td>
+                            <td class="py-4 px-6 font-bold text-blue-600">${dados.titulo_imovel || 'Imóvel'}</td>
+                            <td class="py-4 px-6 text-gray-900">${formatarData(dados.data_checkin)}</td>
+                            <td class="py-4 px-6 text-gray-900">${formatarData(dados.data_checkout)}</td>
                             <td class="py-4 px-6 font-bold text-gray-700">${valorFormatado}</td>
                             <td class="py-4 px-6">
                                 <span class="${corStatus} px-2 py-1 rounded text-xs font-bold uppercase">${dados.status}</span>
@@ -194,14 +210,13 @@
                     tabela.innerHTML += linha;
                 });
 
-                // 4. ATUALIZA OS CARDS FINANCEIROS
-                const economia = totalGanhos * 0.15; // 15% que ele pagaria ao Airbnb
-                
+                // Atualiza os cartões financeiros com as somas de todas as casas dele
+                const economia = totalGanhos * 0.15; 
                 document.getElementById('ganhos-mes').innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalGanhos);
                 document.getElementById('taxas-economizadas').innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(economia);
 
             } catch (error) {
-                console.error("Erro ao buscar reservas:", error);
+                console.error("Erro ao buscar dados do dashboard:", error);
                 tabela.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-red-500">Erro ao carregar dados. Verifique o console.</td></tr>';
             }
         }
