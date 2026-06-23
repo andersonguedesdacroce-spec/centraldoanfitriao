@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SuaMarca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- Sidebar (Menu Lateral) -->
+    <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-gray-800">
+            <i class="fa-solid fa-house-chimney text-blue-500 text-xl mr-2"></i>
+            <span class="font-bold text-lg">SuaMarca</span>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <a href="#" class="flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg">
+                <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-regular fa-calendar-alt w-6"></i> Calendário
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-users w-6"></i> Hóspedes
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-link w-6"></i> Sincronização (iCal)
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-gear w-6"></i> Configurações
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-800">
+            <a href="#" class="flex items-center px-4 py-2 text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-arrow-right-from-bracket w-6"></i> Sair
+            </a>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        
+        <!-- Header Superior -->
+        <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
+            <h1 class="text-xl font-semibold text-gray-800">Visão Geral</h1>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-blue-600 hover:underline text-sm font-medium">
+                    <i class="fa-solid fa-external-link-alt mr-1"></i> Ver meu site
+                </a>
+                <div class="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                    A
+                </div>
+            </div>
+        </header>
+
+        <!-- Área de Dados -->
+        <div class="p-8">
+            
+            <!-- Cards de Resumo -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Card 1: Ganhos -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">Ganhos neste mês</h3>
+                    <div class="text-3xl font-bold text-gray-900 mb-2">R$ 4.250,00</div>
+                    <span class="text-green-500 text-sm font-medium"><i class="fa-solid fa-arrow-up"></i> 12% vs mês passado</span>
+                </div>
+                
+                <!-- Card 2: Economia (Gatilho de Valor) -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">Taxas Economizadas</h3>
+                    <div class="text-3xl font-bold text-green-600 mb-2">R$ 637,50</div>
+                    <span class="text-gray-400 text-sm font-medium">Ao não usar outras plataformas</span>
+                </div>
+
+                <!-- Card 3: Status iCal -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-start">
+                    <h3 class="text-gray-500 text-sm font-medium mb-3">Status de Sincronização</h3>
+                    <div class="flex items-center space-x-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                        <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-green-700 text-sm font-medium">Airbnb Sincronizado</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Última atualização: Há 5 minutos</p>
+                </div>
+            </div>
+
+            <!-- Próximas Reservas e Ações Rápida -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Lista de Reservas -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-800">Próximas Reservas</h2>
+                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">Ver todas</button>
+                    </div>
+                    <div class="p-0">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-sm">
+                                    <th class="py-3 px-6 font-medium">Hóspede</th>
+                                    <th class="py-3 px-6 font-medium">Datas</th>
+                                    <th class="py-3 px-6 font-medium">Origem</th>
+                                    <th class="py-3 px-6 font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700 text-sm">
+                                <tr class="border-b border-gray-50">
+                                    <td class="py-4 px-6 font-medium">João Silva</td>
+                                    <td class="py-4 px-6">12 Jul - 15 Jul</td>
+                                    <td class="py-4 px-6"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Site Direto</span></td>
+                                    <td class="py-4 px-6 text-green-600">Confirmada</td>
+                                </tr>
+                                <tr class="border-b border-gray-50">
+                                    <td class="py-4 px-6 font-medium">Maria Fernanda</td>
+                                    <td class="py-4 px-6">20 Jul - 25 Jul</td>
+                                    <td class="py-4 px-6"><span class="bg-pink-100 text-pink-700 px-2 py-1 rounded text-xs font-bold">Airbnb (iCal)</span></td>
+                                    <td class="py-4 px-6 text-gray-500">Bloqueado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Painel de Links Rápidos -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4">Links do Imóvel</h2>
+                    <p class="text-sm text-gray-600 mb-4">Compartilhe este link no seu Instagram ou WhatsApp para receber reservas diretas.</p>
+                    
+                    <div class="flex items-center mb-6">
+                        <input type="text" readonly value="suamarca.com/meu-apto" class="bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <button class="bg-blue-600 text-white px-4 py-2.5 rounded-r-lg hover:bg-blue-700 transition">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-gray-800 mb-2">Exportar Calendário (iCal)</h3>
+                    <p class="text-xs text-gray-500 mb-2">Cole este link no painel do seu Airbnb.</p>
+                    <div class="flex items-center">
+                        <input type="text" readonly value="suamarca.com/ical/12345.ics" class="bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <button class="bg-gray-800 text-white px-4 py-2.5 rounded-r-lg hover:bg-gray-900 transition">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
