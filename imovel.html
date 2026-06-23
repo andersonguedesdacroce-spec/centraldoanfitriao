@@ -68,7 +68,7 @@
                 </div>
             </div>
 
-<!-- Direita: Widget de Reserva Atualizado -->
+            <!-- Direita: Widget de Reserva Atualizado -->
             <div class="md:w-1/3">
                 <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg sticky top-6">
                     <div class="mb-4">
@@ -125,17 +125,37 @@
         </div>
     </main>
 
-    <!-- Script de Processamento de Pagamento -->
-    <script>
+    <!-- Script de Processamento e Conexão com Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Suas chaves exatas do projeto Central do Anfitrião
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CFAimgAxgeOhcWQ",
+            authDomain: "central-do-anfitriao.firebaseapp.com",
+            projectId: "central-do-anfitriao",
+            storageBucket: "central-do-anfitriao.firebasestorage.app",
+            messagingSenderId: "625070810610",
+            appId: "1:625070810610:web:9f12968b89c666d332b76b",
+            measurementId: "G-4LNN8EN46S"
+        };
+
+        // Inicializando o Banco de Dados
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Configuração Falsa do Anfitrião (Até criarmos a tela dele)
         const configAnfitriao = {
             telefoneWhatsapp: "5511999999999",
-            metodoPagamento: "whatsapp", // Altere para "mercadopago" para testar o outro fluxo
+            metodoPagamento: "whatsapp", 
             tituloImovel: "Apto Premium Centro",
             valorDiaria: 250,
             taxaLimpeza: 100
         };
 
-        function processarReserva() {
+        // Tornando a função global para o HTML conseguir chamá-la
+        window.processarReserva = async function() {
             const checkin = document.getElementById('checkin').value;
             const checkout = document.getElementById('checkout').value;
             const hospedes = document.getElementById('hospedes').value;
@@ -146,14 +166,43 @@
             }
 
             const total = (configAnfitriao.valorDiaria * 3) + configAnfitriao.taxaLimpeza;
+            
+            // Alterando o texto do botão para mostrar que está carregando
+            const btn = document.querySelector('button[onclick="processarReserva()"]');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "Processando...";
+            btn.disabled = true;
 
-            if (configAnfitriao.metodoPagamento === "whatsapp") {
-                const mensagem = `Olá! Gostaria de reservar o ${configAnfitriao.tituloImovel} do dia ${checkin} até ${checkout} para ${hospedes} hóspedes. Vi que o valor total fica em R$ ${total}. Como podemos seguir com o pagamento?`;
-                const urlWhatsapp = `https://wa.me/${configAnfitriao.telefoneWhatsapp}?text=${encodeURIComponent(mensagem)}`;
-                window.open(urlWhatsapp, '_blank');
-                
-            } else if (configAnfitriao.metodoPagamento === "mercadopago") {
-                alert(`Redirecionando para o checkout seguro do Mercado Pago para pagar R$ ${total}...`);
+            try {
+                // SALVANDO NO FIREBASE!
+                const docRef = await addDoc(collection(db, "Reserva"), {
+                    imovel_slug: "apto-premium-centro",
+                    data_checkin: checkin,
+                    data_checkout: checkout,
+                    quantidade_hospedes: hospedes,
+                    valor_total: total,
+                    status: "pendente",
+                    criado_em: new Date()
+                });
+
+                console.log("Reserva salva com ID: ", docRef.id);
+
+                // Continua para o pagamento
+                if (configAnfitriao.metodoPagamento === "whatsapp") {
+                    const mensagem = `Olá! Gostaria de reservar o ${configAnfitriao.tituloImovel} do dia ${checkin} até ${checkout} para ${hospedes} hóspedes. Vi que o valor total fica em R$ ${total}. Como podemos seguir com o pagamento?`;
+                    const urlWhatsapp = `https://wa.me/${configAnfitriao.telefoneWhatsapp}?text=${encodeURIComponent(mensagem)}`;
+                    window.open(urlWhatsapp, '_blank');
+                } else if (configAnfitriao.metodoPagamento === "mercadopago") {
+                    alert(`Reserva ${docRef.id} criada! Redirecionando para o Mercado Pago...`);
+                }
+
+            } catch (erro) {
+                console.error("Erro ao salvar no Firebase: ", erro);
+                alert("Verifique o console para ver o erro (F12).");
+            } finally {
+                // Restaura o botão
+                btn.innerText = textoOriginal;
+                btn.disabled = false;
             }
         }
     </script>
