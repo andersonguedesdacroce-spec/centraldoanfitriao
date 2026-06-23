@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuaMarca - Reservas Diretas para Anfitriões</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <nav class="bg-white shadow-sm py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fa-solid fa-house-chimney text-blue-600 text-2xl mr-2"></i>
+                <span class="font-bold text-xl text-gray-900">SuaMarca</span>
+            </div>
+            <div>
+                <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 font-medium">Login</a>
+                <a href="#planos" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition">Criar Conta</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-white py-20 text-center border-b">
+        <div class="max-w-4xl mx-auto px-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-6">
+                Fuja das taxas das plataformas e tenha seu próprio site de reservas.
+            </h1>
+            <p class="text-xl text-gray-600 mb-8">
+                Fidelize seus hóspedes recorrentes com um site próprio. Sincronização automática de calendário via iCal sem risco de overbooking.
+            </p>
+            <a href="#planos" class="inline-block bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-8 py-4 rounded-lg shadow-md transition">
+                Começar meu teste grátis
+            </a>
+            <p class="mt-4 text-sm text-gray-500">Sem necessidade de cartão de crédito no teste de 14 dias.</p>
+        </div>
+    </header>
+
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900">Como funciona?</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="w-14 h-14 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-globe text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Seu Site em Minutos</h3>
+                    <p class="text-gray-600">Página de reservas com suas fotos, regras e preços, pronta para compartilhar no WhatsApp ou Instagram.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="w-14 h-14 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-regular fa-calendar-check text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Sincronização iCal</h3>
+                    <p class="text-gray-600">Integração perfeita com Airbnb e Booking. Fechou lá, bloqueia aqui. Vendeu aqui, bloqueia lá.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div class="w-14 h-14 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-wallet text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Zero Taxas por Reserva</h3>
+                    <p class="text-gray-600">Você paga apenas uma mensalidade fixa. 100% do valor da reserva vai direto para a sua conta.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="planos" class="py-16 bg-white border-t">
+        <div class="max-w-3xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Um preço simples e justo</h2>
+            <p class="text-gray-600 mb-8">Pague a mensalidade com a economia de uma única diária.</p>
+            
+            <div class="bg-gray-50 p-8 rounded-2xl shadow-sm border border-gray-200 max-w-sm mx-auto">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Plano Pro</h3>
+                <div class="text-4xl font-extrabold text-blue-600 mb-6">R$ 69<span class="text-lg text-gray-500 font-normal">/mês</span></div>
+                <ul class="text-left space-y-3 mb-8 text-gray-600">
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> 1 Propriedade inclusa</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Sincronização de Calendário</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Sem taxas sobre reservas</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Link personalizado</li>
+                </ul>
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
+                    Assinar Agora
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-gray-400 py-8 text-center">
+        <p>&copy; 2026 SuaMarca. Todos os direitos reservados.</p>
+    </footer>
+
+</body>
+</html>
