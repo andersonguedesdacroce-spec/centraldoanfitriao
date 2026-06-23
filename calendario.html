@@ -6,12 +6,10 @@
     <title>Calendário - Central do Anfitrião</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Biblioteca FullCalendar (Visual do Calendário) -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 </head>
 <body class="bg-gray-100 font-sans antialiased flex h-screen overflow-hidden hidden" id="body-calendario">
 
-    <!-- Sidebar (Menu Lateral) -->
     <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
         <div class="h-16 flex items-center px-6 border-b border-gray-800">
             <i class="fa-solid fa-house-chimney text-blue-500 text-xl mr-2"></i>
@@ -21,12 +19,11 @@
             <a href="dashboard.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
             </a>
-            <!-- Aba Calendário agora está destacada em azul -->
             <a href="calendario.html" class="flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg">
                 <i class="fa-regular fa-calendar-alt w-6"></i> Calendário
             </a>
             <a href="configuracoes.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition">
-                <i class="fa-solid fa-gear w-6"></i> Configurações
+                <i class="fa-solid fa-house-user w-6"></i> Meus Imóveis
             </a>
         </nav>
         <div class="p-4 border-t border-gray-800">
@@ -36,30 +33,23 @@
         </div>
     </aside>
 
-    <!-- Conteúdo Principal -->
     <main class="flex-1 flex flex-col h-screen overflow-y-auto">
-        
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
-            <h1 class="text-xl font-semibold text-gray-800">Calendário de Reservas</h1>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition text-sm flex items-center">
-                <i class="fa-solid fa-plus mr-2"></i> Bloquear Data
-            </button>
+            <h1 class="text-xl font-semibold text-gray-800">Calendário Integrado</h1>
+            <span class="text-sm text-gray-500">Exibindo reservas de todo o portfólio</span>
         </header>
 
-        <!-- Área do Calendário -->
         <div class="p-8 h-full">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full">
-                <!-- A mágica do calendário vai acontecer dentro desta div abaixo -->
                 <div id='calendario-host'></div>
             </div>
         </div>
     </main>
 
-    <!-- Script de Lógica e Conexão -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
@@ -74,64 +64,63 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Verifica se está logado
+        let usuarioLogadoUid = null;
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('body-calendario').classList.remove('hidden');
+                usuarioLogadoUid = user.uid;
                 carregarCalendario();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        // Função que busca no Firebase e monta o Calendário Visual
         async function carregarCalendario() {
             try {
-                // 1. Busca todas as reservas no banco
-                const querySnapshot = await getDocs(collection(db, "Reserva"));
+                // PASSO 1: Descobrir os imóveis deste anfitrião
+                const qImoveis = query(collection(db, "Imoveis"), where("id_anfitriao", "==", usuarioLogadoUid));
+                const snapImoveis = await getDocs(qImoveis);
+                const idsMeusImoveis = [];
+                
+                snapImoveis.forEach(doc => { idsMeusImoveis.push(doc.id); });
+
+                if (idsMeusImoveis.length === 0) {
+                    renderizarFullCalendar([]); // Calendário vazio se não tiver imóveis
+                    return;
+                }
+
+                // PASSO 2: Buscar as reservas APENAS desses imóveis
+                const promessasDeBusca = idsMeusImoveis.map(idImovel => {
+                    const qReserva = query(collection(db, "Reserva"), where("id_imovel", "==", idImovel));
+                    return getDocs(qReserva);
+                });
+
+                const resultadosBusca = await Promise.all(promessasDeBusca);
                 const eventos = [];
 
-                // 2. Transforma as reservas do banco no formato que o FullCalendar entende
-                querySnapshot.forEach((doc) => {
-                    const dados = doc.data();
-                    
-                    // Lógica para que a data de checkout no calendário abranja o dia correto
-                    let dataCheckout = new Date(dados.data_checkout);
-                    dataCheckout.setDate(dataCheckout.getDate() + 1); 
-                    const checkoutFormatado = dataCheckout.toISOString().split('T')[0];
+                // PASSO 3: Montar os eventos para o FullCalendar
+                resultadosBusca.forEach(snapReserva => {
+                    snapReserva.forEach(doc => {
+                        const dados = doc.data();
+                        
+                        let dataCheckout = new Date(dados.data_checkout);
+                        dataCheckout.setDate(dataCheckout.getDate() + 1); 
+                        const checkoutFormatado = dataCheckout.toISOString().split('T')[0];
 
-                    eventos.push({
-                        id: doc.id,
-                        title: `${dados.quantidade_hospedes} Hóspedes`,
-                        start: dados.data_checkin,
-                        end: checkoutFormatado, // Data de fim no FullCalendar é exclusiva
-                        color: dados.status === 'pendente' ? '#eab308' : '#2563eb', // Amarelo se pendente, Azul se confirmada
-                        allDay: true
+                        eventos.push({
+                            id: doc.id,
+                            // O título agora mostra o nome da casa + quantidade de hóspedes
+                            title: `${dados.titulo_imovel || 'Imóvel'} (${dados.quantidade_hospedes} Hósp.)`,
+                            start: dados.data_checkin,
+                            end: checkoutFormatado,
+                            color: dados.status === 'pendente' ? '#eab308' : '#2563eb',
+                            allDay: true
+                        });
                     });
                 });
 
-                // 3. Renderiza (desenha) o calendário na tela
-                var calendarEl = document.getElementById('calendario-host');
-                var calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    locale: 'pt-br', // Deixa tudo em português
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,dayGridWeek'
-                    },
-                    buttonText: {
-                        today: 'Hoje',
-                        month: 'Mês',
-                        week: 'Semana'
-                    },
-                    events: eventos, // Passa a nossa lista de reservas pro calendário
-                    eventClick: function(info) {
-                        alert('Reserva ID: ' + info.event.id + '\nDatas: ' + info.event.startStr + ' até ' + info.event.endStr);
-                    }
-                });
-
-                calendar.render();
+                renderizarFullCalendar(eventos);
 
             } catch (error) {
                 console.error("Erro ao carregar reservas pro calendário:", error);
@@ -139,19 +128,40 @@
             }
         }
 
-        // Logout
+        function renderizarFullCalendar(eventosParaMostrar) {
+            var calendarEl = document.getElementById('calendario-host');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek'
+                },
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mês',
+                    week: 'Semana'
+                },
+                events: eventosParaMostrar,
+                eventClick: function(info) {
+                    alert('Reserva: ' + info.event.title + '\nDatas: ' + info.event.startStr + ' até ' + info.event.endStr);
+                }
+            });
+            calendar.render();
+        }
+
         document.getElementById('btn-sair').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = 'login.html');
         });
     </script>
 
-    <!-- Um pouquinho de CSS para deixar o calendário combinando com o seu layout -->
     <style>
         .fc-theme-standard td, .fc-theme-standard th { border-color: #f3f4f6; }
         .fc .fc-button-primary { background-color: #2563eb; border-color: #2563eb; }
         .fc .fc-button-primary:hover { background-color: #1d4ed8; border-color: #1d4ed8; }
         .fc .fc-daygrid-day.fc-day-today { background-color: #eff6ff; }
-        .fc-event { cursor: pointer; border: none; padding: 2px 4px; border-radius: 4px; font-size: 0.8em;}
+        .fc-event { cursor: pointer; border: none; padding: 2px 4px; border-radius: 4px; font-size: 0.8em; font-weight: bold;}
     </style>
 </body>
 </html>
