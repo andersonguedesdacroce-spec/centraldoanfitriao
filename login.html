@@ -7,14 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-sans antialiased flex items-center justify-center h-screen">
+<body class="bg-gray-50 font-sans antialiased flex items-center justify-center h-screen relative">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-gray-100 relative">
         
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
+            <a href="index.html" title="Voltar para a Home" class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4 hover:bg-blue-200 hover:scale-110 transition-all cursor-pointer shadow-sm">
                 <i class="fa-solid fa-house-chimney text-blue-600 text-xl"></i>
-            </div>
+            </a>
             <h2 id="titulo-pagina" class="text-2xl font-bold text-gray-900">Acesse sua conta</h2>
             <p id="subtitulo-pagina" class="text-sm text-gray-500 mt-1">Gerencie suas reservas e ganhos.</p>
         </div>
@@ -48,21 +48,18 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // Sua chave exata copiada do Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBsQS5f4TK-SWBV22Y6CfAimgAxgeOhcWQ",
             authDomain: "central-do-anfitriao.firebaseapp.com",
             projectId: "central-do-anfitriao",
             storageBucket: "central-do-anfitriao.firebasestorage.app",
             messagingSenderId: "625070810610",
-            appId: "1:625070810610:web:9f12968b89c666d332b76b",
-            measurementId: "G-4LNN8EN46S"
+            appId: "1:625070810610:web:9f12968b89c666d332b76b"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Controle de Tela (Login vs Cadastro)
         let isLoginMode = true; 
 
         window.alternarModo = function() {
@@ -74,20 +71,17 @@
             document.getElementById('texto-alternancia').innerText = isLoginMode ? "Não tem uma conta?" : "Já tem uma conta?";
             document.getElementById('btn-alternancia').innerText = isLoginMode ? "Cadastre-se grátis" : "Faça login";
             
-            // Oculta erros antigos ao trocar de tela
             document.getElementById('mensagem-erro').classList.add('hidden');
         };
 
-        // Lógica de Autenticação
         document.getElementById('auth-form').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Impede a página de recarregar
+            e.preventDefault(); 
             
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
             const btnSubmit = document.getElementById('btn-submit');
             const msgErro = document.getElementById('mensagem-erro');
             
-            // UI de Carregamento
             const textoOriginal = btnSubmit.innerText;
             btnSubmit.innerText = "Aguarde...";
             btnSubmit.disabled = true;
@@ -95,20 +89,15 @@
 
             try {
                 if (isLoginMode) {
-                    // Tenta Fazer Login
                     const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-                    console.log("Logado com sucesso:", userCredential.user);
-                    window.location.href = 'dashboard.html'; // Redireciona para o painel
+                    window.location.href = 'dashboard.html'; 
                 } else {
-                    // Tenta Criar Conta Nova
                     const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-                    console.log("Conta criada com sucesso:", userCredential.user);
-                    window.location.href = 'dashboard.html'; // Redireciona para o painel
+                    window.location.href = 'dashboard.html'; 
                 }
             } catch (error) {
                 console.error("Erro Firebase Auth:", error);
                 
-                // Tratamento de erros amigável
                 msgErro.classList.remove('hidden');
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     msgErro.innerText = "E-mail ou senha incorretos.";
@@ -120,7 +109,6 @@
                     msgErro.innerText = "Ocorreu um erro: " + error.message;
                 }
             } finally {
-                // Restaura o botão
                 btnSubmit.innerText = textoOriginal;
                 btnSubmit.disabled = false;
             }
